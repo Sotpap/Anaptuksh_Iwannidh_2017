@@ -1,0 +1,120 @@
+#include "trie.h"
+
+Trie_Ptr Init_Trie() {
+    Trie_Ptr trie;
+
+
+    trie = malloc(sizeof(Trie));
+
+    trie->root = malloc(sizeof(Trie_Node)); /*Allocate space for root */
+
+    trie->root->size = 0; /*We have no children when we begin*/
+
+    return trie;
+}
+
+Trie_Node_Ptr New_Node(char* word, char is_final)
+{
+
+    Trie_Node_Ptr new_node;
+
+    new_node = malloc(sizeof(Trie_Node));
+
+    new_node->size = 0;
+
+    new_node->word = malloc((strlen(word) + 1) * sizeof(char));
+    strcpy(new_node->word, word);
+
+    new_node->is_final = is_final;
+
+
+    return new_node;
+
+
+}
+
+int Insert_Ngram(Trie_Node_Ptr root,char* ngram)
+{
+    char * current_word = strtok(ngram, " \n"); // Get first word of current ngram
+
+    char * remaining_ngram = strtok(NULL, "\n"); // Get the rest ngram
+
+    if(current_word == NULL ) return 1;
+
+    Trie_Node_Ptr prefix_node;
+    //check if current ngram exists in children array//
+    int found = 0;
+    for(int i = 0 ; i < root->size ; i++)
+    {
+        if(strcmp(root->children[i]->word,current_word) == 0)
+        {
+            prefix_node = root->children[i]; /*Store the location of node*/
+            found = 1;
+            break;
+        }
+    }
+    if(found == 0) /*If we have not found word,we add it on trie*/
+    {
+        Trie_Node_Ptr new_node;
+        if (remaining_ngram == NULL) /*If we handle the last word of ngram*/
+        {
+            new_node = New_Node(current_word, 'T');
+            printf("evala thn leksh %s\n",current_word);
+
+        }
+        else
+        {
+            new_node = New_Node(current_word, 'F');
+            printf("evala thn leksh %s\n",current_word);
+        }
+        if (root->size == 0) /*If we have no children,we allocate children array and store the location of node*/
+        {
+            root->children = malloc(1 * sizeof(Trie_Node_Ptr*));
+
+            root->children[0] = new_node;
+
+            (root->size)++;
+        }
+        else /*If we have children*/
+        {
+            int new_size = root->size;
+            if (root->size % 2 == 0 || root->size == 1) /*If we have to re-allocate our array*/
+            {
+                new_size *= 2;
+                root->children = realloc(root->children, new_size * sizeof(Trie_Node_Ptr *));
+            }
+            //lex taks//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+            root->children[root->size] = new_node;
+            (root->size)++;
+        }
+      	return  Insert_Ngram(new_node,remaining_ngram); /*Recursive call for remaining ngram*/
+
+    }
+    else /* If prefix was found*/
+    {
+	    if(remaining_ngram == NULL) /*If we handle the last word of ngram*/
+	    {
+		    prefix_node->is_final = 'T';
+		    return 1;
+	    }
+	    else
+	    {
+        	return Insert_Ngram(prefix_node,remaining_ngram); /*Recursive call for remaining ngram*/
+    	}
+    }
+    
+}
+
+
+void Print_Trie(Trie_Node_Ptr root)
+{
+    printf("\n");
+    int i;
+    for(i = 0 ; i < root->size ; i++ )
+    {
+        Print_Trie(root->children[i]);
+        printf("%s %c",root->children[i]->word,root->children[i]->is_final);
+    }
+    printf("\n");
+}
