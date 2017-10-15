@@ -83,9 +83,33 @@ int Insert_Ngram(Trie_Node_Ptr root,char* ngram)
                 new_size *= 2;
                 root->children = realloc(root->children, new_size * sizeof(Trie_Node_Ptr *));
             }
-            //lex taks//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-            root->children[root->size] = new_node;
+            //lex taks//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+///////////////////////////////////////
+            int j=-1;
+            for(int i = 0 ; i < root->size ; i++) {
+                if ((strcmp(current_word, root->children[i]->word) < 0)) {
+                    j = i;
+
+
+                    break;
+                }
+            }
+            //while (strcmp(current_word,root->children[j]->word)>0) j++;
+            if(j!=-1) {
+                for (int k = root->size - 1; k >= j; k--) {
+                    root->children[k + 1] = root->children[k];
+                }
+                root->children[j] = new_node;
+
+            }
+            else
+            {
+                root->children[root->size] = new_node;
+
+            }
+
+////////////////////////////////////////////
             (root->size)++;
         }
       	return  Insert_Ngram(new_node,remaining_ngram); /*Recursive call for remaining ngram*/
@@ -103,18 +127,17 @@ int Insert_Ngram(Trie_Node_Ptr root,char* ngram)
         	return Insert_Ngram(prefix_node,remaining_ngram); /*Recursive call for remaining ngram*/
     	}
     }
-    
+
 }
 
 
 void Print_Trie(Trie_Node_Ptr root)
 {
-    printf("\n");
     int i;
     for(i = 0 ; i < root->size ; i++ )
     {
         Print_Trie(root->children[i]);
-        printf("%s %c",root->children[i]->word,root->children[i]->is_final);
+        printf("%s ",root->children[i]->word);
     }
     printf("\n");
 }
