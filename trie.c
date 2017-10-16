@@ -59,13 +59,13 @@ int Insert_Ngram(Trie_Node_Ptr root,char* ngram)
         if (remaining_ngram == NULL) /*If we handle the last word of ngram*/
         {
             new_node = New_Node(current_word, 'T');
-            printf("evala thn leksh %s\n",current_word);
+           // printf("evala thn leksh %s\n",current_word);
 
         }
         else
         {
             new_node = New_Node(current_word, 'F');
-            printf("evala thn leksh %s\n",current_word);
+            //printf("evala thn leksh %s\n",current_word);
         }
         if (root->size == 0) /*If we have no children,we allocate children array and store the location of node*/
         {
@@ -84,7 +84,7 @@ int Insert_Ngram(Trie_Node_Ptr root,char* ngram)
                 root->children = realloc(root->children, new_size * sizeof(Trie_Node_Ptr *));
             }
 
-            //lex taks//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            //Na diavazetai!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ///////////////////////////////////////
             int j=-1;
             for(int i = 0 ; i < root->size ; i++) {
@@ -129,6 +129,64 @@ int Insert_Ngram(Trie_Node_Ptr root,char* ngram)
     }
 
 }
+//////Gia kapoio pousth logo synexizei meta thn teleutaia le3h
+char* Search_Ngram(Trie_Node_Ptr root,Trie_Node_Ptr current,char* ngram,char* on_going_ngram)
+{
+
+    char * current_word = strtok(ngram, " \n"); // Get first word of current ngram
+
+    char * remaining_ngram = strtok(NULL, "\n"); // Get the rest ngram
+
+    if(current_word == NULL ) return NULL;
+    for(int i = 0 ; i < current->size ; i++)
+    {
+        if(strcmp(current->children[i]->word,current_word) == 0) { // If we find word
+            if (current->children[i]->is_final == 'F') // If word is not final
+            {
+                if(on_going_ngram == NULL)
+                {
+                    on_going_ngram = malloc((strlen(current_word)+1)*sizeof(char));
+                    sprintf(on_going_ngram,"%s",current_word);
+
+                }
+                else
+                {
+                    sprintf(on_going_ngram,"%s %s",on_going_ngram,current_word);
+                }
+                Search_Ngram(root,current->children[i], remaining_ngram,on_going_ngram); // Continue searching
+            }
+            else
+            {
+                if(on_going_ngram == NULL)
+                {
+                    on_going_ngram = malloc((strlen(current_word)+1)*sizeof(char));
+                    sprintf(on_going_ngram,"%s",current_word);
+
+                    puts(on_going_ngram);
+
+                    Search_Ngram(root,current->children[i], remaining_ngram, on_going_ngram);
+
+
+
+                }
+                else {
+                    sprintf(on_going_ngram, "%s %s", on_going_ngram, current_word);
+
+                    puts(on_going_ngram);
+
+                    Search_Ngram(root,current->children[i], remaining_ngram, on_going_ngram);
+
+
+                }
+
+            }
+        }
+        else {
+            Search_Ngram(root,root,remaining_ngram,on_going_ngram);
+        }
+    }
+}
+
 
 
 void Print_Trie(Trie_Node_Ptr root)
