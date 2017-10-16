@@ -129,8 +129,67 @@ int Insert_Ngram(Trie_Node_Ptr root,char* ngram)
     }
 
 }
-//////Gia kapoio pousth logo synexizei meta thn teleutaia le3h
-char* Search_Ngram(Trie_Node_Ptr root,Trie_Node_Ptr current,char* ngram,char* on_going_ngram)
+Trie_Node_Ptr is_child(Trie_Node_Ptr node,char* word)
+{
+    for(int i = 0 ; i < node->size ; i++)
+    {
+        if(strcmp(word,node->children[i]->word) == 0) /*If we found word*/
+        {
+            return node->children[i];
+        }
+        else if(strcmp(word,node->children[i]->word) < 0)
+        {
+            return NULL;
+        }
+    }
+    return NULL;
+}
+
+void Search_Ngram(Trie_Node_Ptr root,Trie_Node_Ptr node,char* ngram,char* on_going_ngram)
+{
+    if(ngram == NULL) return;
+    char * current_word = strtok(ngram, " \n"); // Get first word of current ngram
+
+    char * remaining_ngram = strtok(NULL, "\n"); // Get the rest ngram
+
+    Trie_Node_Ptr current_node = is_child(node,current_word);
+
+    if(current_node == NULL)
+    {
+        if(on_going_ngram)
+        {
+           // free(on_going_ngram);
+            printf("prin kalesw remaining = %s\n",ngram);
+            char* new_ngram = malloc(((strlen(remaining_ngram)+strlen(current_word))+2)*sizeof(char));
+            sprintf(new_ngram,"%s %s",current_word,remaining_ngram);
+            Search_Ngram(root,root,new_ngram,NULL);
+        }
+
+    }
+    else
+    {
+        if(on_going_ngram == NULL)
+        {
+            on_going_ngram = malloc((strlen(current_word)+1)*sizeof(char));
+            sprintf(on_going_ngram,"%s",current_word);
+
+        }
+        else
+        {
+            sprintf(on_going_ngram,"%s %s",on_going_ngram,current_word);
+        }
+        if(current_node->is_final == 'T')
+        {
+            puts(on_going_ngram);
+        }
+        Search_Ngram(root,current_node,remaining_ngram,on_going_ngram);
+
+    }
+
+
+}
+
+/*char* Search_Ngram(Trie_Node_Ptr root,Trie_Node_Ptr current,char* ngram,char* on_going_ngram)
 {
 
     char * current_word = strtok(ngram, " \n"); // Get first word of current ngram
@@ -185,7 +244,7 @@ char* Search_Ngram(Trie_Node_Ptr root,Trie_Node_Ptr current,char* ngram,char* on
             Search_Ngram(root,root,remaining_ngram,on_going_ngram);
         }
     }
-}
+}*/
 
 
 
