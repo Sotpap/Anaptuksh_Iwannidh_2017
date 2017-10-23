@@ -89,11 +89,12 @@ int Insert_Ngram(Trie* index,char* ngram) {
 
 
 
-void Print_Trie(Trie_Node_Ptr root) {
+void Print_Trie(Trie_Node_Ptr root)
+{
 
    for(int i = 0 ; i < root->size ; i++)
    {
-       Print_Trie(root->children);
-       printf("%s\n",root.word);
+       Print_Trie(root[i].children);
+       puts(root[i].word);
    }
 }
