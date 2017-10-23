@@ -10,13 +10,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define OK_SUCCESS 1
-
+#define SIZE 10
 
 typedef struct Trie_Node {
     char* word;
     char is_final;
-    struct Trie_Node ** children; /*Array of pointers to children*/
+    struct Trie_Node*  children; /*Array of pointers to children*/
     int size; //How many children this node has
 } Trie_Node;
 
@@ -31,8 +30,8 @@ typedef Trie* Trie_Ptr;
 
 Trie_Ptr Init_Trie(void);
 
-Trie_Node* New_Node(char* , char );
-int Insert_Ngram(Trie_Node_Ptr root,char* ngram) ;
-void Search_Ngram(Trie_Node_Ptr root,Trie_Node_Ptr node,char* ngram,char* on_going_ngram);
+Trie_Node New_Node(char* word,char is_final);
+int Insert_Ngram(Trie* root,char* ngram) ;
+void Search_Ngram(Trie_Node_Ptr root,Trie_Node_Ptr node,char* ngram,char* on_going_ngram,FILE* fp);
 
 void Print_Trie(Trie_Node_Ptr root);
