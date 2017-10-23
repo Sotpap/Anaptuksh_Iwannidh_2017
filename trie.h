@@ -32,6 +32,6 @@ Trie_Ptr Init_Trie(void);
 
 Trie_Node New_Node(char* word,char is_final);
 int Insert_Ngram(Trie* root,char* ngram) ;
-void Search_Ngram(Trie_Node_Ptr root,Trie_Node_Ptr node,char* ngram,char* on_going_ngram,FILE* fp);
+void Search_Ngram(Trie *root, char* ngram, FILE* fp);
 
 void Print_Trie(Trie_Node_Ptr root);
