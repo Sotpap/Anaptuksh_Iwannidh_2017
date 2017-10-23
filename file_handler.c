@@ -64,7 +64,7 @@ int Close_Files(Arguments args)
     return 1;
 }
 
-int Extract_From_Init(FILE* init_file, Trie_Node_Ptr root) /*Getting words from init file and adds them to trie*/
+int Extract_From_Init(FILE* init_file, Trie* root) /*Getting words from init file and adds them to trie*/
 {
     char* line = NULL;
     size_t len = 0;

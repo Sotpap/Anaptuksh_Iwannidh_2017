@@ -68,8 +68,13 @@ int Insert_Ngram(Trie* index,char* ngram) {
 
             current_node[position] = new_node ;
 
+            /// prepei na vrw to swsto position
+            ///psaxnw ston pinaka me ta trie nodes kai an vrw
 
-            //printf("evala sto %p to %s\n",current_node,current_word);
+
+
+
+            printf("evala sto %p to %s\n",current_node,current_word);
             (current_node->size)++;
 
             current_node = current_node[position].children;

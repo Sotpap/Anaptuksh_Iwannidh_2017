@@ -20,7 +20,7 @@ typedef struct Arguments
 int Get_Arguments(int argc,char** argv,Arguments* args); /*If returns 0 we have an error */
 
 int Close_Files(Arguments); /*Closing all open files*/
-int Extract_From_Init(FILE*, Trie_Node_Ptr); /*Getting words from init file and adds them to trie*/
+int Extract_From_Init(FILE*, Trie*); /*Getting words from init file and adds them to trie*/
 
 
 
