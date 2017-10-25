@@ -70,7 +70,7 @@ void Insert_Ngram(Trie* trie,char* ngram)
             size = (*current_node_array)->size;
             if(size % SIZE == 0)
             {
-                //printf("sto realloc me size = %d\n",size);
+                printf("sto realloc me size = %d\n",size);
                 *current_node_array = realloc(*current_node_array,(size*size)*sizeof(Trie_Node));
             }
 
@@ -91,7 +91,7 @@ void Insert_Ngram(Trie* trie,char* ngram)
         current_word = strtok(remaining_ngram," \n");
         remaining_ngram = strtok(NULL,"\n");
     }
-    //printf("%d\n",++count);
+    printf("%d\n",++count);
 
 }
 
@@ -103,33 +103,33 @@ void Search_Ngram(Trie* trie, char* ngram)
     char* on_going_ngram = NULL;
 
     Trie_Node** current_node_array = &(trie->root);
+
     int position;
-    int size;
     while(current_word!=NULL)
     {
 
         position = is_child(*current_node_array,current_word,(*current_node_array)->size);
         if(position == -1 )/*If we have not found word*/
         {
-            if(on_going_ngram!= NULL)
+            if(on_going_ngram!= NULL) //Free on going ngram for next iteration
             {
                 free(on_going_ngram);
                 on_going_ngram = NULL;
             }
-            if(current_node_array != &trie->root)
+            if(current_node_array != &trie->root) //If we aren't on root and haven't found an ngram
             {
-                current_node_array = &(trie->root);
+                current_node_array = &(trie->root); //return to root
             }
-            else
+            else //If we are at root node and have't found an ngramm or a prefix of an ngram
             {
-                current_word = strtok(remaining_ngram," \n");
+                current_word = strtok(remaining_ngram," \n"); //get the next word and start from the top again
                 remaining_ngram = strtok(NULL,"\n");
             }
 
         }
-        else
+        else //if we found that a word is at least prefix of an ngram
         {
-            if(on_going_ngram == NULL)
+            if(on_going_ngram == NULL) //allocating memory and keeping the found prefix
             {
                 on_going_ngram = malloc((strlen(current_word)+1)*sizeof(char));
                 sprintf(on_going_ngram,"%s", current_word);
@@ -139,14 +139,14 @@ void Search_Ngram(Trie* trie, char* ngram)
                 on_going_ngram = realloc(on_going_ngram, (strlen(on_going_ngram)+(strlen(current_word)+2))*sizeof(char));
                 sprintf(on_going_ngram,"%s %s",on_going_ngram, current_word);
             }
-            if(current_node_array[0][position].is_final == 'T')
+            if(current_node_array[0][position].is_final == 'T') //if we conclude that on-going-ngram is an ngram
             {
                 puts(on_going_ngram);
             }
 
-            current_node_array = (*current_node_array)[position].children;
+            current_node_array = (*current_node_array)[position].children; //keep checking in children in case this is a prefix
 
-            current_word = strtok(remaining_ngram," \n");
+            current_word = strtok(remaining_ngram," \n"); //get the next word
             remaining_ngram = strtok(NULL,"\n");
         }
 
