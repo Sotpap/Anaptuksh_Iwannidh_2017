@@ -31,6 +31,6 @@ typedef struct Trie
 Trie* Init_Trie(void);
 
 Trie_Node* New_Node(char* word,char is_final);
-void Insert_Ngram(Trie* root,char* ngram) ;
-void Print_Trie(Trie_Node* root);
-
+void Insert_Ngram(Trie* root,char* ngram);
+void Search_Ngram(Trie* index, char* ngram);
+void Print_Trie(Trie_Node* root, int depth);
