@@ -55,17 +55,31 @@ void Insert_Ngram(Trie* trie,char* ngram)
         position = is_child(*current_node_array,current_word,(*current_node_array)->size);
         if(position == -1 )/*If we have not found word*/
         {
-            size = (*current_node_array)->size;
-
-
             Trie_Node* new_node = NULL;
             if(remaining_ngram == NULL) new_node = New_Node(current_word,'T');
             else new_node = New_Node(current_word,'F');
 
-            //printf("tha valw to %s sto %p sthn thesh %d\n",current_word,current_node_array[0] ,(*current_node_array)->size);
+            size = (*current_node_array)->size;
+            position = size;
+            for(int i = 0 ; i < size ; i++)
+            {
+                if(strcmp(current_node_array[0][i].word,current_word) > 0)
+                {
 
-            current_node_array[0][size] = *new_node;
-            ((*current_node_array)->size)++;
+                    position = i;
+                    printf("size = %d,position = %d\n",size,position);
+                    memmove(&(current_node_array[0][position+1]),&(current_node_array[0][position]),(size - position)*sizeof(Trie_Node));
+                    //break;
+                }
+            }
+
+
+            //printf("tha valw to %s sto %p sthn thesh %d\n",current_word,&(current_node_array[0][position]),position);
+            (*current_node_array)[position] = *new_node;
+
+            (*current_node_array)->size++;
+
+
             size = (*current_node_array)->size;
             if(size % SIZE == 0)
             {
@@ -73,9 +87,7 @@ void Insert_Ngram(Trie* trie,char* ngram)
             }
 
 
-
             current_node_array = new_node->children;
-
         }
         else
         {
@@ -161,8 +173,10 @@ void Search_Ngram(Trie* trie, char* ngram)
     }
     if(strlen(result) == 0) printf("-1\n");
     else puts(result);
+
     free(result);
     free(on_going_ngram);
+
 }
 
 void Print_Trie(Trie_Node* root)
