@@ -21,7 +21,7 @@ int Get_Arguments(int argc,char** argv,Arguments* args); /*If returns 0 we have 
 
 int Close_Files(Arguments); /*Closing all open files*/
 int Extract_From_Init(FILE*, Trie*); /*Getting words from init file and adds them to trie*/
-
+int Extract_From_Query(FILE* query_file, Trie* trie); /*Getting jobs from greeks and giving them to immigrants */
 
 
 

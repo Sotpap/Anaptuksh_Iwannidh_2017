@@ -79,3 +79,38 @@ int Extract_From_Init(FILE* init_file, Trie* root) /*Getting words from init fil
     }
     return 1;
 }
+
+int Extract_From_Query(FILE* query_file, Trie* trie) /*Getting jobs from greeks and giving them to immigrants */
+{
+    char* line = NULL;
+    size_t len = 0;
+    char* job = NULL;
+    char* work = NULL;
+
+    while(getline(&line,&len,query_file)!=-1)
+    {
+        line[strcspn(line, "\n")] = 0;
+
+        job = strtok(line," ");
+
+        work = strtok(NULL,"\n");
+
+        if(strcmp(job,"A") == 0)
+        {
+            Insert_Ngram(trie,work);
+        }
+        else if(strcmp(job,"Q") == 0)
+        {
+            Search_Ngram(trie, work);
+        }
+        else if(strcmp(job,"D") == 0)
+        {
+            printf("delete.\n");
+        }
+        else if(strcmp(job,"F") == 0)
+        {
+            printf("FFFFFFFF\n");
+        }
+    }
+    return 1;
+}
