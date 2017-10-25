@@ -159,8 +159,10 @@ void Search_Ngram(Trie* trie, char* ngram)
         }
 
     }
-    puts(result);
-
+    if(strlen(result) == 0) printf("-1\n");
+    else puts(result);
+    free(result);
+    free(on_going_ngram);
 }
 
 void Print_Trie(Trie_Node* root)
