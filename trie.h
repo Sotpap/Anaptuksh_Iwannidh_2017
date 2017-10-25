@@ -10,28 +10,27 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define SIZE 10
+#define SIZE 2
 
-typedef struct Trie_Node {
+typedef struct Trie_Node
+{
     char* word;
     char is_final;
-    struct Trie_Node*  children; /*Array of pointers to children*/
+    struct Trie_Node**  children; /*Array of pointers to children*/
     int size; //How many children this node has
 } Trie_Node;
 
-typedef Trie_Node* Trie_Node_Ptr;
-
 typedef struct Trie
 {
-    Trie_Node_Ptr  root;
+    Trie_Node*  root;
+    int root_size;
 }Trie;
-typedef Trie* Trie_Ptr;
 
 
-Trie_Ptr Init_Trie(void);
 
-Trie_Node New_Node(char* word,char is_final);
-int Insert_Ngram(Trie* root,char* ngram) ;
-void Search_Ngram(Trie *root, char* ngram, FILE* fp);
+Trie* Init_Trie(void);
 
-void Print_Trie(Trie_Node_Ptr root);
+Trie_Node* New_Node(char* word,char is_final);
+void Insert_Ngram(Trie* root,char* ngram) ;
+void Print_Trie(Trie_Node* root);
+
