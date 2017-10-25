@@ -41,7 +41,6 @@ int is_child(Trie_Node* node_array,char* word,int size)
     }
     return -1;
 }
-
 void Insert_Ngram(Trie* trie,char* ngram)
 {
     char* current_word = strtok(ngram," \n");
@@ -70,7 +69,6 @@ void Insert_Ngram(Trie* trie,char* ngram)
             size = (*current_node_array)->size;
             if(size % SIZE == 0)
             {
-                printf("sto realloc me size = %d\n",size);
                 *current_node_array = realloc(*current_node_array,(size*size)*sizeof(Trie_Node));
             }
 
@@ -91,19 +89,21 @@ void Insert_Ngram(Trie* trie,char* ngram)
         current_word = strtok(remaining_ngram," \n");
         remaining_ngram = strtok(NULL,"\n");
     }
-    printf("%d\n",++count);
+
 
 }
-
-
 void Search_Ngram(Trie* trie, char* ngram)
 {
+    char* result = malloc((strlen(ngram)+1)*sizeof(char));
+    memset(result,'\0',(strlen(ngram)+1)*sizeof(char));
+
     char* current_word = strtok(ngram," \n");
     char* remaining_ngram = strtok(NULL,"\n");
     char* on_going_ngram = NULL;
 
-    Trie_Node** current_node_array = &(trie->root);
 
+
+    Trie_Node** current_node_array = &(trie->root);
     int position;
     while(current_word!=NULL)
     {
@@ -111,25 +111,25 @@ void Search_Ngram(Trie* trie, char* ngram)
         position = is_child(*current_node_array,current_word,(*current_node_array)->size);
         if(position == -1 )/*If we have not found word*/
         {
-            if(on_going_ngram!= NULL) //Free on going ngram for next iteration
+            if(on_going_ngram!= NULL)
             {
                 free(on_going_ngram);
                 on_going_ngram = NULL;
             }
-            if(current_node_array != &trie->root) //If we aren't on root and haven't found an ngram
+            if(current_node_array != &trie->root)
             {
-                current_node_array = &(trie->root); //return to root
+                current_node_array = &(trie->root);
             }
-            else //If we are at root node and have't found an ngramm or a prefix of an ngram
+            else
             {
-                current_word = strtok(remaining_ngram," \n"); //get the next word and start from the top again
+                current_word = strtok(remaining_ngram," \n");
                 remaining_ngram = strtok(NULL,"\n");
             }
 
         }
-        else //if we found that a word is at least prefix of an ngram
+        else
         {
-            if(on_going_ngram == NULL) //allocating memory and keeping the found prefix
+            if(on_going_ngram == NULL)
             {
                 on_going_ngram = malloc((strlen(current_word)+1)*sizeof(char));
                 sprintf(on_going_ngram,"%s", current_word);
@@ -139,27 +139,35 @@ void Search_Ngram(Trie* trie, char* ngram)
                 on_going_ngram = realloc(on_going_ngram, (strlen(on_going_ngram)+(strlen(current_word)+2))*sizeof(char));
                 sprintf(on_going_ngram,"%s %s",on_going_ngram, current_word);
             }
-            if(current_node_array[0][position].is_final == 'T') //if we conclude that on-going-ngram is an ngram
+            if(current_node_array[0][position].is_final == 'T')
             {
-                puts(on_going_ngram);
+
+                if(strstr(result,on_going_ngram) == NULL)
+                {
+
+
+                    if(remaining_ngram == NULL) sprintf(result,"%s%s",result,on_going_ngram);
+                    else sprintf(result,"%s|%s",result,on_going_ngram);
+
+                }
             }
 
-            current_node_array = (*current_node_array)[position].children; //keep checking in children in case this is a prefix
+            current_node_array = (*current_node_array)[position].children;
 
-            current_word = strtok(remaining_ngram," \n"); //get the next word
+            current_word = strtok(remaining_ngram," \n");
             remaining_ngram = strtok(NULL,"\n");
         }
 
     }
+    puts(result);
 
 }
 
-void Print_Trie(Trie_Node* root, int depth)
+void Print_Trie(Trie_Node* root)
 {
-    depth++;
     for(int i = 0 ; i < root->size ; i++)
     {
-        Print_Trie(*(root[i].children), depth);
-        printf("%s me %c me ba8os %d \n",root[i].word,root[i].is_final, depth);
+        Print_Trie(*(root[i].children));
+        printf("%s me %c\n",root[i].word,root[i].is_final);
     }
 }
