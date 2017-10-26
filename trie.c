@@ -1,146 +1,146 @@
 #include "trie.h"
-int count = 0;
-Trie* Init_Trie()
+
+Trie* Init_Trie(void)
 {
     Trie* trie = malloc(sizeof(Trie));
 
-    trie->root = malloc(SIZE*sizeof(Trie_Node));
-    trie->root->size = 0;
-    trie->root->children = malloc(sizeof(Trie_Node*));
+    trie->root = malloc(sizeof(Trie_Node));
 
-    trie->root->children[0] = malloc(SIZE*sizeof(Trie_Node));
-    memset(trie->root->children[0],'\0',SIZE*sizeof(Trie_Node));
+    trie->root->word = NULL;
+
+    trie->root->size = 0;
+
+    trie->root->is_final = 0;
+
+    trie->root->children = malloc(SIZE*sizeof(Trie_Node));
+
+    memset(trie->root->children,'\0',SIZE*sizeof(Trie_Node));
 
     return trie;
 }
 
-Trie_Node* New_Node(char* word,char is_final)
-{
-    Trie_Node* new_node = malloc(sizeof(Trie_Node));
+void Insert_Ngram(Trie* trie,char* ngram) {
+    Trie_Node *current_node = trie->root;
 
-    new_node->is_final = is_final;
+    char *current_word = strtok(ngram, " \n");  // Get first word of current ngram
 
-    new_node->word = malloc((strlen(word)+1)*sizeof(char));
-    strcpy(new_node->word,word);
+    char *remaining_ngram = strtok(NULL, "\n");  // Get the rest ngram
 
-    new_node->size = 0;
+    int i , position,node_size;
 
-    new_node->children = malloc(sizeof(Trie_Node*));
+    while (current_word != NULL) {
 
-    new_node->children[0] = malloc(SIZE*sizeof(Trie_Node));
-    memset(new_node->children[0],'\0',SIZE*sizeof(Trie_Node));
+        position = -1;
 
-    return new_node;
+        node_size = current_node->size;
 
-}
-int is_child(Trie_Node* node_array,char* word,int size)
-{
-    for(int i = 0 ; i < size ; i++)
-    {
-        if(strcmp(word,node_array[i].word)==0) return i;
-    }
-    return -1;
-}
-void Insert_Ngram(Trie* trie,char* ngram)
-{
-    char* current_word = strtok(ngram," \n");
-    char* remaining_ngram = strtok(NULL,"\n");
-
-    Trie_Node** current_node_array = &(trie->root);
-    int position;
-    int size;
-    while(current_word!=NULL)
-    {
-
-        position = is_child(*current_node_array,current_word,(*current_node_array)->size);
-        if(position == -1 )/*If we have not found word*/
+        ///Checking if current word exists in current_nodes children
+        for (i = 0; i < node_size; i++)
         {
-            Trie_Node* new_node = NULL;
-            if(remaining_ngram == NULL) new_node = New_Node(current_word,'T');
-            else new_node = New_Node(current_word,'F');
-
-            size = (*current_node_array)->size;
-            position = size;
-            for(int i = 0 ; i < size ; i++)
+            if (strcmp(current_word, current_node->children[i].word) == 0)
             {
-                if(strcmp(current_node_array[0][i].word,current_word) > 0)
-                {
+                position = i;
+                break;
+            }
+        }
 
-                    position = i;
-                    printf("size = %d,position = %d\n",size,position);
-                    memmove(&(current_node_array[0][position+1]),&(current_node_array[0][position]),(size - position)*sizeof(Trie_Node));
-                    //break;
-                }
+        if (position == -1) /// If we haven't found the word in current_node's children
+        {
+            Trie_Node* new_node = malloc(sizeof(Trie_Node));  /// Creating new node
+
+            new_node->word = malloc((strlen(current_word)+1)*sizeof(char));
+            strcpy(new_node->word, current_word);
+
+            if(remaining_ngram == NULL) new_node->is_final = 1;
+            else new_node->is_final = 0;
+
+            new_node->size = 0;
+
+            new_node->children = malloc(SIZE*sizeof(Trie_Node));
+
+            memset(new_node->children,'\0',SIZE*sizeof(Trie_Node));
+
+            if((node_size % SIZE == 0) && (node_size != 0))
+            {
+                //Trie_Node* temp = *(current_node->children);
+                //temp = realloc(temp, (node_size*2)*sizeof(Trie_Node));
+                //*(current_node->children) = temp;
+
+                current_node->children = realloc(current_node->children, (node_size*2)*sizeof(Trie_Node));
+                //memset(new_node->children+(node_size*sizeof(Trie_Node)),'\0',(node_size)*sizeof(Trie_Node));
             }
 
+            current_node->children[node_size] = *new_node; /// Inserting new node to current's children.
 
-            //printf("tha valw to %s sto %p sthn thesh %d\n",current_word,&(current_node_array[0][position]),position);
-            (*current_node_array)[position] = *new_node;
-
-            (*current_node_array)->size++;
-
-
-            size = (*current_node_array)->size;
-            if(size % SIZE == 0)
-            {
-                *current_node_array = realloc(*current_node_array,(size*size)*sizeof(Trie_Node));
-            }
-
-
-            current_node_array = new_node->children;
+            current_node->size += 1;
+            current_node = &current_node->children[node_size]; /// Passing new node as current to keep inserting the rest of the ngram
         }
-        else
+        else  ///If we found the word in current_node's children
         {
-            if(remaining_ngram == NULL) current_node_array[0][position].is_final = 'T';
+            if (remaining_ngram == NULL) current_node->children[position].is_final = 1; /// Checking if current word is the final of the ngram
 
-
-            current_node_array = (*current_node_array)[position].children;
-
+            current_node = &current_node->children[position];   /// Passing new node as current to keep inserting the rest of the ngram
 
         }
-        current_word = strtok(remaining_ngram," \n");
-        remaining_ngram = strtok(NULL,"\n");
+
+        current_word = strtok(remaining_ngram, " \n"); ///Getting next word if exists.
+
+        remaining_ngram = strtok(NULL, " "); /// Getting the rest of the ngram if exists.
+
     }
-
-
 }
-void Search_Ngram(Trie* trie, char* ngram)
-{
+
+void Search_Ngram(Trie* trie,char* ngram) {
+    Trie_Node *current_node = trie->root;
+
+    char *current_word = strtok(ngram, " \n");  // Get first word of current ngram
+
+    char *remaining_ngram = strtok(NULL, "\n");  // Get the rest ngram
+
+    char* on_going_ngram = NULL;
+
     char* result = malloc((strlen(ngram)+1)*sizeof(char));
     memset(result,'\0',(strlen(ngram)+1)*sizeof(char));
 
-    char* current_word = strtok(ngram," \n");
-    char* remaining_ngram = strtok(NULL,"\n");
-    char* on_going_ngram = NULL;
+    int i , position,node_size;
 
-
-
-    Trie_Node** current_node_array = &(trie->root);
-    int position;
-    while(current_word!=NULL)
+    while (current_word != NULL)
     {
 
-        position = is_child(*current_node_array,current_word,(*current_node_array)->size);
-        if(position == -1 )/*If we have not found word*/
+        position = -1;
+
+        node_size = current_node->size;
+
+        ///Checking if current word exists in current_nodes children
+        for (i = 0; i < node_size; i++)
+        {
+            if (strcmp(current_word, current_node->children[i].word) == 0)
+            {
+                position = i;
+                break;
+            }
+        }
+
+        if (position == -1) /// If we haven't found the word in current_node's children
         {
             if(on_going_ngram!= NULL)
             {
                 free(on_going_ngram);
                 on_going_ngram = NULL;
             }
-            if(current_node_array != &trie->root)
+            if(current_node != trie->root)
             {
-                current_node_array = &(trie->root);
+                current_node = (trie->root);
             }
             else
             {
                 current_word = strtok(remaining_ngram," \n");
                 remaining_ngram = strtok(NULL,"\n");
             }
-
         }
-        else
+        else  ///If we found the word in current_node's children
         {
+
             if(on_going_ngram == NULL)
             {
                 on_going_ngram = malloc((strlen(current_word)+1)*sizeof(char));
@@ -151,39 +151,38 @@ void Search_Ngram(Trie* trie, char* ngram)
                 on_going_ngram = realloc(on_going_ngram, (strlen(on_going_ngram)+(strlen(current_word)+2))*sizeof(char));
                 sprintf(on_going_ngram,"%s %s",on_going_ngram, current_word);
             }
-            if(current_node_array[0][position].is_final == 'T')
+            if(current_node->children[position].is_final)
             {
-
                 if(strstr(result,on_going_ngram) == NULL)
                 {
-
-
                     if(remaining_ngram == NULL) sprintf(result,"%s%s",result,on_going_ngram);
                     else sprintf(result,"%s|%s",result,on_going_ngram);
-
                 }
             }
 
-            current_node_array = (*current_node_array)[position].children;
+            current_node = &current_node->children[position];
 
             current_word = strtok(remaining_ngram," \n");
             remaining_ngram = strtok(NULL,"\n");
         }
-
     }
+
     if(strlen(result) == 0) printf("-1\n");
     else puts(result);
-
     free(result);
     free(on_going_ngram);
-
 }
 
-void Print_Trie(Trie_Node* root)
+void Print_Trie(Trie_Node node)
 {
-    for(int i = 0 ; i < root->size ; i++)
+    for(int i = 0; i < node.size; i++)
     {
-        Print_Trie(*(root[i].children));
-        printf("%s me %c\n",root[i].word,root[i].is_final);
+        Print_Trie(node.children[i]);
+
+    }
+    if(node.word != NULL)
+    {
+        printf(" %s |", node.word);
+
     }
 }
