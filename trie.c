@@ -91,6 +91,67 @@ void Insert_Ngram(Trie* trie,char* ngram) {
 }
 
 
+char* Search_Substream(Trie_Node* root,char* ngram)
+{
+    Trie_Node* current_node = root;
+
+    char *current_word = strtok(ngram, " \n");
+
+    char *remaining_ngram = strtok(NULL, "\n");
+
+    char *on_going_ngram = NULL;
+
+    int i , position, node_size;
+
+    while (current_word != NULL)
+    {
+        position = -1;
+
+        node_size = current_node->size;
+
+        ///Checking if current word exists in current_nodes children
+        for (i = 0; i < node_size; i++)
+        {
+            if (strcmp(current_word, current_node->children[i].word) == 0)
+            {
+                position = i;
+                break;
+            }
+        }
+
+        if(position == -1) /// If we haven't found the word in current_node's children
+        {
+            if(on_going_ngram != NULL) free(on_going_ngram);
+            return NULL;
+        }
+        else
+        {
+            if(on_going_ngram == NULL)
+            {
+                on_going_ngram = malloc((strlen(current_word)+1)*sizeof(char));
+                sprintf(on_going_ngram,"%s", current_word);
+            }
+            else
+            {
+                on_going_ngram = realloc(on_going_ngram, (strlen(on_going_ngram)+(strlen(current_word)+2))*sizeof(char));
+                sprintf(on_going_ngram,"%s %s",on_going_ngram, current_word);
+            }
+            if(current_node->children[position].is_final)
+            {
+                
+            }
+
+            current_node = &current_node->children[position];
+
+            current_word = strtok(remaining_ngram," \n");
+            remaining_ngram = strtok(NULL,"\n");
+
+        }
+
+    }
+}
+
+
 void Search_Ngram(Trie* trie,char* ngram) {
     Trie_Node *current_node = trie->root;
 
@@ -156,8 +217,16 @@ void Search_Ngram(Trie* trie,char* ngram) {
             {
                 if(strstr(result,on_going_ngram) == NULL)
                 {
-                    if(remaining_ngram == NULL) sprintf(result,"%s%s",result,on_going_ngram);
-                    else sprintf(result,"%s|%s",result,on_going_ngram);
+                    if(remaining_ngram == NULL)
+                    {
+                        result = realloc(result, (strlen(result)+(strlen(on_going_ngram)+2))*sizeof(char));
+                        sprintf(result,"%s%s",result,on_going_ngram);
+                    }
+                    else
+                    {
+                        result = realloc(result, (strlen(result)+(strlen(on_going_ngram)+2))*sizeof(char));
+                        sprintf(result,"%s|%s",result,on_going_ngram);
+                    }
                 }
             }
 
