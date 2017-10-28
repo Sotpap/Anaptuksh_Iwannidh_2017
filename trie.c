@@ -75,7 +75,7 @@ void Insert_Ngram(Trie* trie,char* ngram) {
                 {
 
                     right_position = i;
-                    memcpy(&(current_node->children[right_position+1]),&(current_node->children[right_position]),(node_size - right_position)*sizeof(Trie_Node));
+                    memmove(&(current_node->children[right_position+1]),&(current_node->children[right_position]),(node_size - right_position)*sizeof(Trie_Node));
                     break;
                 }
             }
