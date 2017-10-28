@@ -85,10 +85,11 @@ void Insert_Ngram(Trie* trie,char* ngram) {
 
         current_word = strtok(remaining_ngram, " \n"); ///Getting next word if exists.
 
-        remaining_ngram = strtok(NULL, " "); /// Getting the rest of the ngram if exists.
+        remaining_ngram = strtok(NULL, "\n"); /// Getting the rest of the ngram if exists.
 
     }
 }
+
 
 void Search_Ngram(Trie* trie,char* ngram) {
     Trie_Node *current_node = trie->root;
@@ -172,6 +173,7 @@ void Search_Ngram(Trie* trie,char* ngram) {
     free(result);
     free(on_going_ngram);
 }
+
 
 void Print_Trie(Trie_Node node)
 {
