@@ -6,6 +6,8 @@ Trie* Init_Trie(void)
 
     trie->root = malloc(sizeof(Trie_Node));
 
+    trie->depth = 0;
+
     trie->root->word = NULL;
 
     trie->root->size = 0;
@@ -100,7 +102,7 @@ void Insert_Ngram(Trie* trie,char* ngram) {
     }
 }
 
-char* Search_Substream(Trie_Node* root,char* ngram)
+char* Search_Substream(Trie_Node* root,char* ngram, char* result)
 {
     Trie_Node* current_node = root;
 
@@ -109,9 +111,6 @@ char* Search_Substream(Trie_Node* root,char* ngram)
     char *remaining_ngram = strtok(NULL, "\n");
 
     char *on_going_ngram = NULL;
-
-    char* result = malloc((strlen(ngram)+1)*sizeof(char));
-    memset(result,'\0',(strlen(ngram)+1)*sizeof(char));
 
     int i , position, node_size;
     while (current_word != NULL)
@@ -141,24 +140,28 @@ char* Search_Substream(Trie_Node* root,char* ngram)
             if(on_going_ngram == NULL)
             {
                 on_going_ngram = malloc((strlen(current_word)+1)*sizeof(char));
-                sprintf(on_going_ngram,"%s", current_word);
+                strcpy(on_going_ngram, current_word);
+                //sprintf(on_going_ngram,"%s", current_word);
             }
             else
             {
                 on_going_ngram = realloc(on_going_ngram, (strlen(on_going_ngram)+(strlen(current_word)+2))*sizeof(char));
-                sprintf(on_going_ngram,"%s %s",on_going_ngram, current_word);
+                strcat(on_going_ngram, " ");
+                strcat(on_going_ngram, current_word);
+                //sprintf(on_going_ngram,"%s %s",on_going_ngram, current_word);
             }
             if(current_node->children[position].is_final)
             {
-                if(strstr(result,on_going_ngram) == NULL) {
-                    if (remaining_ngram == NULL)
-                    {
-                        result = realloc(result, (strlen(result) + (strlen(on_going_ngram) + 2)) * sizeof(char));
-                        sprintf(result, "%s%s", result, on_going_ngram);
-                    } else {
-                        result = realloc(result, (strlen(result) + (strlen(on_going_ngram) + 2)) * sizeof(char));
-                        sprintf(result, "%s|%s", result, on_going_ngram);
-                    }
+                if(result == NULL)
+                {
+                    result = malloc((strlen(on_going_ngram) + 1) * sizeof(char));
+                    strcpy(result, on_going_ngram);
+                }
+                else if(strstr(result,on_going_ngram) == NULL) {
+                    result = realloc(result, (strlen(result) + (strlen(on_going_ngram) + 2)) * sizeof(char));
+                    strcat(result, "|");
+                    strcat(result, on_going_ngram);
+                    //sprintf(result, "%s|%s", result, on_going_ngram);
                 }
 
             }
@@ -167,119 +170,41 @@ char* Search_Substream(Trie_Node* root,char* ngram)
 
             current_word = strtok(remaining_ngram," \n");
             remaining_ngram = strtok(NULL,"\n");
-
+            //printf("sthn substream exw mexri twra %s \n ", result);
         }
 
     }
+    return result;
 }
 
 
 void Search_Ngram(Trie* trie,char* ngram) {
-    Trie_Node *current_node = trie->root;
 
-    char *current_word = strtok(ngram, " \n");  // Get first word of current ngram
+    char *cut_word = NULL;  // Used later to cut the first word of current ngram
 
-    char *remaining_ngram = strtok(NULL, "\n");  // Get the rest ngram
+    char *remaining_ngram = strtok(ngram, "\n");  // Get the rest ngram
 
-    char* on_going_ngram = NULL;
+    char* result = NULL;
 
-    char* result = malloc((strlen(ngram)+1)*sizeof(char));
-    memset(result,'\0',(strlen(ngram)+1)*sizeof(char));
 
     char* check_sub = NULL;
 
-    char* substream = NULL;
-
-    int i , position,node_size;
-
-    while (current_word != NULL)
+    while (remaining_ngram != NULL)
     {
 
-        position = -1;
+        check_sub = malloc((strlen(remaining_ngram)+1)*sizeof(char));
+        strcpy(check_sub, remaining_ngram);
+        result = Search_Substream(trie->root, check_sub, result);
 
-        node_size = current_node->size;
-        i = 0;
-        ///Checking if current word exists in current_nodes children
-        while((i < node_size) &&  (strcmp(current_word, current_node->children[i].word) >= 0))
-        {
-            if (strcmp(current_word, current_node->children[i].word) == 0)
-            {
-                position = i;
-                break;
-            }
-            i++;
-        }
+        free(check_sub);
 
-        if (position == -1) /// If we haven't found the word in current_node's children
-        {
-            if(on_going_ngram!= NULL)
-            {
-                free(on_going_ngram);
-                on_going_ngram = NULL;
-            }
-            if(current_node != trie->root)
-            {
-                current_node = (trie->root);
-            }
-            else
-            {
-                current_word = strtok(remaining_ngram," \n");
-                remaining_ngram = strtok(NULL,"\n");
-            }
-        }
-        else  ///If we found the word in current_node's children
-        {
-
-            if(on_going_ngram == NULL)
-            {
-                on_going_ngram = malloc((strlen(current_word)+1)*sizeof(char));
-                sprintf(on_going_ngram,"%s", current_word);
-            }
-            else
-            {
-                on_going_ngram = realloc(on_going_ngram, (strlen(on_going_ngram)+(strlen(current_word)+2))*sizeof(char));
-                sprintf(on_going_ngram,"%s %s",on_going_ngram, current_word);
-            }
-            check_sub = malloc((strlen(remaining_ngram)+1)*sizeof(char));
-            strcpy(check_sub, remaining_ngram);
-            if((substream = Search_Substream(trie->root, check_sub)) != NULL)
-            {
-                if(strstr(result,substream) == NULL)
-                {
-                        result = realloc(result, (strlen(result)+(strlen(substream)+2))*sizeof(char));
-                        sprintf(result,"%s %s",result,substream);
-                }
-                free(substream);
-            }
-            free(check_sub);
-            if(current_node->children[position].is_final)
-            {
-                if(strstr(result,on_going_ngram) == NULL)
-                {
-                    if(remaining_ngram == NULL)
-                    {
-                        result = realloc(result, (strlen(result)+(strlen(on_going_ngram)+2))*sizeof(char));
-                        sprintf(result,"%s%s",result,on_going_ngram);
-                    }
-                    else
-                    {
-                        result = realloc(result, (strlen(result)+(strlen(on_going_ngram)+2))*sizeof(char));
-                        sprintf(result,"%s|%s",result,on_going_ngram);
-                    }
-                }
-            }
-
-            current_node = &current_node->children[position];
-
-            current_word = strtok(remaining_ngram," \n");
-            remaining_ngram = strtok(NULL,"\n");
-        }
+        cut_word = strtok(remaining_ngram," \n");
+        remaining_ngram = strtok(NULL,"\n");
     }
 
     if(strlen(result) == 0) printf("-1\n");
     else puts(result);
     free(result);
-    free(on_going_ngram);
 }
 void Print_Trie(Trie_Node node)
 {

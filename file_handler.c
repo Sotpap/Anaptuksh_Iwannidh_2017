@@ -64,18 +64,25 @@ int Close_Files(Arguments args)
     return 1;
 }
 
-int Extract_From_Init(FILE* init_file, Trie* root) /*Getting words from init file and adds them to trie*/
+int Extract_From_Init(FILE* init_file, Trie* trie) /*Getting words from init file and adds them to trie*/
 {
     char* line = NULL;
     size_t len = 0;
-
+    int i = 0, wc = 1;
 
     while(getline(&line,&len,init_file)!=-1)
     {
         line[strcspn(line, "\n")] = 0;
+        for(i = 0; i < strlen(line); i++)
+        {
+            if(isspace(line[i]))
+                wc++;
+        }
 
-        Insert_Ngram(root,line);
+        if(wc > trie->depth) trie->depth = wc;
 
+        Insert_Ngram(trie,line);
+        wc = 1;
     }
     return 1;
 }
@@ -86,6 +93,7 @@ int Extract_From_Query(FILE* query_file, Trie* trie) /*Getting jobs from greeks 
     size_t len = 0;
     char* job = NULL;
     char* work = NULL;
+    int i = 0, wc = 1;
 
     while(getline(&line,&len,query_file)!=-1)
     {
@@ -97,7 +105,16 @@ int Extract_From_Query(FILE* query_file, Trie* trie) /*Getting jobs from greeks 
 
         if(strcmp(job,"A") == 0)
         {
-            Insert_Ngram(trie,work);
+            for(i = 0; i < strlen(line); i++)
+            {
+                if(isspace(line[i]))
+                    wc++;
+            }
+
+            if(wc > trie->depth) trie->depth = wc;
+
+            Insert_Ngram(trie,line);
+            wc = 1;
         }
         else if(strcmp(job,"Q") == 0)
         {
