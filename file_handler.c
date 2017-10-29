@@ -113,7 +113,7 @@ int Extract_From_Query(FILE* query_file, Trie* trie) /*Getting jobs from greeks 
 
             if(wc > trie->depth) trie->depth = wc;
 
-            Insert_Ngram(trie,line);
+            Insert_Ngram(trie,work);
             wc = 1;
         }
         else if(strcmp(job,"Q") == 0)
