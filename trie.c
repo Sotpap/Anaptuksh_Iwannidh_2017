@@ -1,5 +1,20 @@
 #include "trie.h"
-
+int find_substring(char* result,char* on_going)
+{
+    char* temp = malloc((strlen(result)+1)*sizeof(char));
+    strcpy(temp,result);
+    char* token = strtok(temp,"|");
+    while(token!=NULL)
+    {
+        if(strcmp(token,on_going) == 0 )
+        {
+            return 1;
+        }
+        token = strtok(NULL,"|");
+    }
+    free(temp);
+    return 0;
+}
 Trie* Init_Trie(void)
 {
     Trie* trie = malloc(sizeof(Trie));
@@ -141,14 +156,12 @@ char* Search_Substream(Trie_Node* root,char* ngram, char* result)
             {
                 on_going_ngram = malloc((strlen(current_word)+1)*sizeof(char));
                 strcpy(on_going_ngram, current_word);
-                //sprintf(on_going_ngram,"%s", current_word);
             }
             else
             {
                 on_going_ngram = realloc(on_going_ngram, (strlen(on_going_ngram)+(strlen(current_word)+2))*sizeof(char));
                 strcat(on_going_ngram, " ");
                 strcat(on_going_ngram, current_word);
-                //sprintf(on_going_ngram,"%s %s",on_going_ngram, current_word);
             }
             if(current_node->children[position].is_final)
             {
@@ -157,11 +170,10 @@ char* Search_Substream(Trie_Node* root,char* ngram, char* result)
                     result = malloc((strlen(on_going_ngram) + 1) * sizeof(char));
                     strcpy(result, on_going_ngram);
                 }
-                else if(strstr(result,on_going_ngram) == NULL) {
+                else if(find_substring(result,on_going_ngram) == 0) {
                     result = realloc(result, (strlen(result) + (strlen(on_going_ngram) + 2)) * sizeof(char));
                     strcat(result, "|");
                     strcat(result, on_going_ngram);
-                    //sprintf(result, "%s|%s", result, on_going_ngram);
                 }
 
             }
