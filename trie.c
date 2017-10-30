@@ -63,19 +63,12 @@ int find_substring(char* result,char* on_going)
 Trie* Init_Trie(void)
 {
     Trie* trie = malloc(sizeof(Trie));
-
     trie->root = malloc(sizeof(Trie_Node));
-
     trie->depth = 0;
-
     trie->root->word = NULL;
-
     trie->root->size = 0;
-
     trie->root->is_final = 0;
-
     trie->root->children = malloc(SIZE*sizeof(Trie_Node));
-
     memset(trie->root->children,'\0',SIZE*sizeof(Trie_Node));
 
     return trie;
