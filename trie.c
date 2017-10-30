@@ -21,26 +21,24 @@ int binary_search(Trie_Node* current_node,int min,int max,char* word)
 
 }
 
-int binary_search2(Trie_Node* current_node,int min,int max,char* word,int size)
+int binary_search2(Trie_Node* current_node,int min,int max,char* word)
 {
-    int mid;
-    if(max == min) return 1;
-    while(max > min)
+    int mid, size = max;
+    while(max >= min)
     {
         mid = (max+min)/2;
 
-        if(strcmp(word,current_node->children[mid].word)==0) return -1;
-        else if(strcmp(word,current_node->children[mid].word) < 0)
+        if(strcmp(word,current_node->children[mid].word)==0) return mid;
+        else if(strcmp(current_node->children[mid].word,word) < 0)
         {
-            return mid;
+            min = mid + 1;
         }
         else
         {
-            min = mid+1;
+            max = mid - 1;
         }
     }
     return mid;
-
 
 }
 
@@ -82,6 +80,7 @@ Trie* Init_Trie(void)
 }
 
 void Insert_Ngram(Trie* trie,char* ngram) {
+
     Trie_Node *current_node = trie->root;
 
     char *current_word = strtok(ngram, " \n");  // Get first word of current ngram
@@ -123,11 +122,13 @@ void Insert_Ngram(Trie* trie,char* ngram) {
             }
 
             int right_position = node_size;
-
-            //right_position = binary_search2(current_node,0,node_size-1,current_word,node_size);
-            //memmove(&(current_node->children[right_position+1]),&(current_node->children[right_position]),(node_size - right_position)*sizeof(Trie_Node));
-
-            for(int i = 0 ; i < node_size ; i++)
+          /*  if(right_position > 0) {
+                right_position = binary_search2(current_node, 0, node_size - 1, current_word);
+                memmove(&(current_node->children[right_position + 1]), &(current_node->children[right_position]),
+                        (node_size - right_position) * sizeof(Trie_Node));
+            }
+            */
+           for(int i = 0 ; i < node_size ; i++)
             {
                 if(strcmp(current_node->children[i].word,current_word) > 0)
                 {
@@ -233,8 +234,8 @@ void Search_Substream(Trie_Node* root,char* ngram, char** result)
 }
 
 
-void Search_Ngram(Trie* trie,char* ngram) {
-
+void Search_Ngram(Trie* trie,char* ngram)
+{
     char *cut_word = NULL;  // Used later to cut the first word of current ngram
     char *remaining_ngram = strtok(ngram, "\n");  // Get the rest ngram
     char* result = malloc(((strlen(ngram))+1)*sizeof(char));
@@ -269,4 +270,63 @@ void Print_Trie(Trie_Node node)
         puts(node.children[i].word);
 
     }
+}
+
+int Delete_Ngram(Trie_Node* current_node, char* ngram)
+{
+    char* current_word = strtok(ngram, " \n");
+
+    char* remaining_ngram = strtok(NULL, "\n");
+
+    int position = 0;
+
+    if(current_word == NULL)
+    {
+
+        if(current_node->is_final == 1)
+        {
+
+            current_node->is_final = 0;
+            if(current_node->size == 0)
+            {
+                free(current_node->children);
+                free(current_node->word);
+
+                return 1;
+            }
+            return 0;
+        }
+    }
+    else
+    {
+        position = binary_search(current_node,0, current_node->size -1 ,current_word);
+
+        if(position == -1)
+        {
+            return 0;
+        }
+        else
+        {
+            if(Delete_Ngram(&(current_node->children[position]),remaining_ngram))
+            {
+                memset(&(current_node->children[position]),'\0', sizeof(Trie_Node));
+
+
+                if(position != current_node->size)
+                    memmove(&(current_node->children[position]),&(current_node->children[position+1]),(current_node->size - position)* sizeof(Trie_Node));
+
+                current_node->size--;
+
+                if( (current_node->size == 0) && !(current_node->is_final))
+                {
+                    free(current_node->children);
+                    free(current_node->word);
+                    return 1;
+                }
+                return 0;
+            }
+        }
+    }
+
+    return 0;
 }

@@ -107,7 +107,7 @@ int Extract_From_Query(FILE* query_file, Trie* trie) /*Getting jobs from greeks 
         {
             for(i = 0; i < strlen(line); i++)
             {
-                if(isspace(line[i]))
+                if(isspace(work[i]))
                     wc++;
             }
 
@@ -122,11 +122,12 @@ int Extract_From_Query(FILE* query_file, Trie* trie) /*Getting jobs from greeks 
         }
         else if(strcmp(job,"D") == 0)
         {
-            /// Delete ///
+            Delete_Ngram(trie->root, work);
+
         }
         else if(strcmp(job,"F") == 0)
         {
-           break;
+            //Slav code here.
         }
     }
     return 1;
