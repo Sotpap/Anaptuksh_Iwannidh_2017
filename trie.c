@@ -1,4 +1,49 @@
 #include "trie.h"
+int binary_search(Trie_Node* current_node,int min,int max,char* word)
+{
+    int mid;
+    while(max >= min)
+    {
+        mid = (max+min)/2;
+
+        if(strcmp(word,current_node->children[mid].word)==0) return mid;
+        else if(strcmp(current_node->children[mid].word,word) < 0)
+        {
+            min = mid + 1;
+        }
+        else
+        {
+            max = mid - 1;
+        }
+    }
+    return -1;
+
+
+}
+
+int binary_search2(Trie_Node* current_node,int min,int max,char* word,int size)
+{
+    int mid;
+    if(max == min) return 1;
+    while(max > min)
+    {
+        mid = (max+min)/2;
+
+        if(strcmp(word,current_node->children[mid].word)==0) return -1;
+        else if(strcmp(word,current_node->children[mid].word) < 0)
+        {
+            return mid;
+        }
+        else
+        {
+            min = mid+1;
+        }
+    }
+    return mid;
+
+
+}
+
 int find_substring(char* result,char* on_going)
 {
     char* temp = malloc((strlen(result)+1)*sizeof(char));
@@ -15,40 +60,6 @@ int find_substring(char* result,char* on_going)
     free(temp);
     return 0;
 }
-
-int binarySearch(Trie_Node* node, int size, char* word,int mode)
-{
-    printf("Eimai sto GIT\n");
-    int found = 0, mid = 0, start = 0, end = size;
-
-    while(end > start)
-    {
-        mid = start + (end - start)/2;
-
-        if (strcmp(word, node->children[mid].word) == 0)
-        {
-            found = 1;
-            break;
-        }
-        else if (strcmp(word, node->children[mid].word) > 0)
-        {
-            start = mid + 1;
-        }
-        else if (strcmp(word, node->children[mid].word) < 0)
-        {
-            end = mid - 1;
-        }
-    }
-    if(mode == 1)
-    {
-        return mid;
-    }
-    else if(mode == 2)
-    {
-        return (found == 1) ? mid : -1;
-    }
-}
-
 Trie* Init_Trie(void)
 {
     Trie* trie = malloc(sizeof(Trie));
@@ -77,19 +88,17 @@ void Insert_Ngram(Trie* trie,char* ngram) {
 
     char *remaining_ngram = strtok(NULL, "\n");  // Get the rest ngram
 
-    int i , position,node_size, right_position;
+    int i , position,node_size;
 
-    while (current_word != NULL)
-    {
-        node_size = current_node->size;
+    while (current_word != NULL) {
 
         position = -1;
 
-        ///Checking if current word exists in current_nodes children
-        if(current_node->size > 0)
-        {
-            position =  binarySearch(current_node, current_node->size, current_word, 2);
-        }
+        node_size = current_node->size;
+        i = 0;
+
+
+        position = binary_search(current_node,0,node_size-1,current_word);
 
         if (position == -1) /// If we haven't found the word in current_node's children
         {
@@ -113,7 +122,10 @@ void Insert_Ngram(Trie* trie,char* ngram) {
                 current_node->children = realloc(current_node->children, (node_size*2)*sizeof(Trie_Node));
             }
 
-            right_position = node_size;
+            int right_position = node_size;
+
+            //right_position = binary_search2(current_node,0,node_size-1,current_word,node_size);
+            //memmove(&(current_node->children[right_position+1]),&(current_node->children[right_position]),(node_size - right_position)*sizeof(Trie_Node));
 
             for(int i = 0 ; i < node_size ; i++)
             {
@@ -146,7 +158,7 @@ void Insert_Ngram(Trie* trie,char* ngram) {
     }
 }
 
-char* Search_Substream(Trie_Node* root,char* ngram, char* result)
+void Search_Substream(Trie_Node* root,char* ngram, char** result)
 {
     Trie_Node* current_node = root;
 
@@ -154,49 +166,57 @@ char* Search_Substream(Trie_Node* root,char* ngram, char* result)
 
     char *remaining_ngram = strtok(NULL, "\n");
 
-    char *on_going_ngram = NULL;
+    char *on_going_ngram = malloc(5000);
+    memset(on_going_ngram,'\0',5000);
 
-    int position, node_size;
+    int i , position, node_size;
     while (current_word != NULL)
     {
-        node_size = current_node->size;
-
         position = -1;
 
-        if(node_size > 0)
+        node_size = current_node->size;
+        i = 0;
+
+        position = binary_search(current_node,0,node_size-1,current_word);
+        ///Checking if current word exists in current_nodes children
+        /*while((i < node_size) &&  (strcmp(current_word, current_node->children[i].word) >= 0))
         {
-            position =  binarySearch(current_node, node_size, current_word, 2);
-        }
+            if (strcmp(current_word, current_node->children[i].word) == 0)
+            {
+                position = i;
+                break;
+            }
+            i++;
+        }*/
 
         if(position == -1) /// If we haven't found the word in current_node's children
         {
-            if(on_going_ngram != NULL) free(on_going_ngram);
-            return result;
+           // if(on_going_ngram != NULL) free(on_going_ngram);
+            free(on_going_ngram);
+            //return result;
+            return;
         }
         else
         {
-            if(on_going_ngram == NULL)
+            if(strlen(on_going_ngram) == 0)
             {
-                on_going_ngram = malloc((strlen(current_word)+1)*sizeof(char));
                 strcpy(on_going_ngram, current_word);
             }
             else
             {
-                on_going_ngram = realloc(on_going_ngram, (strlen(on_going_ngram)+(strlen(current_word)+2))*sizeof(char));
                 strcat(on_going_ngram, " ");
                 strcat(on_going_ngram, current_word);
             }
             if(current_node->children[position].is_final)
             {
-                if(result == NULL)
+                if(strlen(*result) == 0)
                 {
-                    result = malloc((strlen(on_going_ngram) + 1) * sizeof(char));
-                    strcpy(result, on_going_ngram);
+                    strcpy(*result, on_going_ngram);
                 }
-                else if(find_substring(result,on_going_ngram) == 0) {
-                    result = realloc(result, (strlen(result) + (strlen(on_going_ngram) + 2)) * sizeof(char));
-                    strcat(result, "|");
-                    strcat(result, on_going_ngram);
+                else if(find_substring(*result,on_going_ngram) == 0)
+                {
+                    strcat(*result, "|");
+                    strcat(*result, on_going_ngram);
                 }
 
             }
@@ -205,54 +225,42 @@ char* Search_Substream(Trie_Node* root,char* ngram, char* result)
 
             current_word = strtok(remaining_ngram," \n");
             remaining_ngram = strtok(NULL,"\n");
-
         }
 
     }
-    return result;
+    free(on_going_ngram);
+    return ;
 }
+
 
 void Search_Ngram(Trie* trie,char* ngram) {
 
     char *cut_word = NULL;  // Used later to cut the first word of current ngram
-
     char *remaining_ngram = strtok(ngram, "\n");  // Get the rest ngram
-
-    char* result = NULL;
-
-    int depth = trie->depth, i = 0;
-    size_t size = 0;
+    char* result = malloc(((strlen(ngram))+1)*sizeof(char));
+    memset(result,'\0',(strlen(ngram)+1)*sizeof(char));
     char* check_sub = NULL;
 
     while (remaining_ngram != NULL)
     {
-        for(i = 0; i < strlen(remaining_ngram); i++)
-        {
-            size++;
-            if(isspace(remaining_ngram[i])) depth--;
-            if(depth == 0) break;
-        }
 
-        check_sub = strndup(remaining_ngram, size);
-
-        result = Search_Substream(trie->root, check_sub, result);
-
-
-
+        check_sub = malloc((strlen(remaining_ngram)+1)*sizeof(char));
+        strcpy(check_sub, remaining_ngram);
+        Search_Substream(trie->root, check_sub, &result);
 
         free(check_sub);
 
-        depth = trie->depth;
-        size = 0;
         cut_word = strtok(remaining_ngram," \n");
         remaining_ngram = strtok(NULL,"\n");
     }
 
-    if(strlen(result) == 0) printf("-1\n");
+    if(strlen(result) == 0 )
+    {
+        printf("-1\n");
+        free(result);
+    }
     else puts(result);
-    free(result);
 }
-
 void Print_Trie(Trie_Node node)
 {
     for(int i = 0; i < node.size; i++)
