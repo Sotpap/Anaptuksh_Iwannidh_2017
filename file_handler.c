@@ -122,11 +122,11 @@ int Extract_From_Query(FILE* query_file, Trie* trie) /*Getting jobs from greeks 
         }
         else if(strcmp(job,"D") == 0)
         {
-
+            /// Delete ///
         }
         else if(strcmp(job,"F") == 0)
         {
-            printf("F\n");
+           break;
         }
     }
     return 1;

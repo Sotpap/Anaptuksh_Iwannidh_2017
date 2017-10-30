@@ -34,6 +34,5 @@ Trie* Init_Trie(void);
 //Trie_Node* New_Node(char* word,char is_final);
 void Insert_Ngram(Trie* root,char* ngram);
 void Search_Ngram(Trie* index, char* ngram);
-char* Search_Substream(Trie_Node* root,char* ngram, char* result);
-int binarySearch(Trie_Node* children_array, int end, char* word,int mode);
+void Search_Substream(Trie_Node* root,char* ngram, char** result);
 void Print_Trie(Trie_Node root);
