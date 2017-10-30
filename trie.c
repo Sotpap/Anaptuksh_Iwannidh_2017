@@ -18,6 +18,7 @@ int find_substring(char* result,char* on_going)
 
 int binarySearch(Trie_Node* node, int size, char* word,int mode)
 {
+    printf("Eimai sto GIT\n");
     int found = 0, mid = 0, start = 0, end = size;
 
     while(end > start)
