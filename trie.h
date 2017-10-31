@@ -15,6 +15,7 @@
 
 typedef struct Trie_Node
 {
+    int fere;
     char* word;
     int is_final;
     struct Trie_Node*  children; /*Array of pointers to children*/
@@ -33,8 +34,8 @@ Trie* Init_Trie(void);
 
 //Trie_Node* New_Node(char* word,char is_final);
 void Insert_Ngram(Trie* root,char* ngram);
-void Search_Ngram(Trie* index, char* ngram);
-void Search_Substream(Trie_Node* root,char* ngram, char** result);
+void Search_Ngram(Trie* index, char* ngram,int);
+void Search_Substream(Trie_Node* root,char* ngram, char** result,int);
 int binary_search(Trie_Node* current_node,int min,int max,char* word);
 int Delete_Ngram(Trie_Node* current_node, char* ngram);
 void Print_Trie(Trie_Node root);

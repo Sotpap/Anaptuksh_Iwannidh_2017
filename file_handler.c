@@ -95,6 +95,7 @@ int Extract_From_Query(FILE* query_file, Trie* trie) /*Getting jobs from greeks 
     char* work = NULL;
     int i = 0, wc = 1;
 
+    int count = 1;
     while(getline(&line,&len,query_file)!=-1)
     {
         line[strcspn(line, "\n")] = 0;
@@ -105,20 +106,13 @@ int Extract_From_Query(FILE* query_file, Trie* trie) /*Getting jobs from greeks 
 
         if(strcmp(job,"A") == 0)
         {
-            for(i = 0; i < strlen(line); i++)
-            {
-                if(isspace(work[i]))
-                    wc++;
-            }
-
-            if(wc > trie->depth) trie->depth = wc;
 
             Insert_Ngram(trie,work);
-            wc = 1;
         }
-        else if(strcmp(job,"Q") == 0)
+        if(strcmp(job,"Q") == 0)
         {
-            Search_Ngram(trie, work);
+            Search_Ngram(trie, work,count);
+            count++;
         }
         else if(strcmp(job,"D") == 0)
         {
@@ -127,7 +121,7 @@ int Extract_From_Query(FILE* query_file, Trie* trie) /*Getting jobs from greeks 
         }
         else if(strcmp(job,"F") == 0)
         {
-            //Slav code here.
+            //break;
         }
     }
     return 1;
