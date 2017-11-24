@@ -93,7 +93,8 @@ int Extract_From_Query(FILE* query_file, Trie* trie) /*Getting jobs from greeks 
     size_t len = 0;
     char* job = NULL;
     char* work = NULL;
-    int i = 0, wc = 1;
+    int i = 0, wc = 1, top_k = 0;
+    Index* result_array = Init_Result_Array();
 
     int count = 1;
     while(getline(&line,&len,query_file)!=-1)
@@ -111,7 +112,7 @@ int Extract_From_Query(FILE* query_file, Trie* trie) /*Getting jobs from greeks 
         }
         if(strcmp(job,"Q") == 0)
         {
-            Search_Ngram(trie, work,count);
+            Search_Ngram(trie, work,count,result_array);
             count++;
         }
         else if(strcmp(job,"D") == 0)
@@ -121,7 +122,18 @@ int Extract_From_Query(FILE* query_file, Trie* trie) /*Getting jobs from greeks 
         }
         else if(strcmp(job,"F") == 0)
         {
-            //break;
+            if(work != NULL)
+            {
+                top_k = atoi(work);
+                ///print top k.
+                Free_Result_Array(result_array);
+                result_array = Init_Result_Array();
+            }
+            int a = 4;
+            Print_Top_K(result_array, a);
+            Free_Result_Array(result_array);
+            result_array = Init_Result_Array();
+
         }
     }
     return 1;

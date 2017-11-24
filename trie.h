@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include "top.h"
 
 #define SIZE 20
 
@@ -34,8 +35,8 @@ Trie* Init_Trie(void);
 
 //Trie_Node* New_Node(char* word,char is_final);
 void Insert_Ngram(Trie* root,char* ngram);
-void Search_Ngram(Trie* index, char* ngram,int);
-void Search_Substream(Trie_Node* root,char* ngram, char** result,int);
+void Search_Ngram(Trie* index, char* ngram,int, Index*);
+void Search_Substream(Trie_Node* root,char* ngram, char** result,int , short int*, Index*);
 int binary_search(Trie_Node* current_node,int min,int max,char* word);
 int Delete_Ngram(Trie_Node* current_node, char* ngram);
 void Print_Trie(Trie_Node root);

@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "trie.h"
+#include "top.h"
 
 typedef struct Arguments
 {

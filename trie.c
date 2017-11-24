@@ -1,4 +1,5 @@
 #include "trie.h"
+#include "bloom.h"
 #include <time.h>
 int binary_search(Trie_Node* current_node,int min,int max,char* word)
 {
@@ -121,7 +122,7 @@ void Insert_Ngram(Trie* trie,char* ngram) {
     }
 }
 
-void Search_Substream(Trie_Node* root,char* ngram, char** result,int count)
+void Search_Substream(Trie_Node* root,char* ngram, char** result,int count, short int *bloom, Index* result_array)
 {
     Trie_Node* current_node = root;
 
@@ -164,14 +165,15 @@ void Search_Substream(Trie_Node* root,char* ngram, char** result,int count)
                 if(strlen(*result) == 0)
                 {
                     strcpy(*result, on_going_ngram);
-                    current_node->children[position].fere = count;
-
+                    insert_bloom(bloom, on_going_ngram);
+                    Insert_Result_Array(result_array,on_going_ngram);
                 }
-                else if( current_node->children[position].fere != count )
+                else if (check_bloom(bloom, on_going_ngram))
                 {
-                    current_node->children[position].fere = count;
                     strcat(*result, "|");
                     strcat(*result, on_going_ngram);
+                    insert_bloom(bloom, on_going_ngram);
+                    Insert_Result_Array(result_array,on_going_ngram);
                 }
 
             }
@@ -187,13 +189,15 @@ void Search_Substream(Trie_Node* root,char* ngram, char** result,int count)
 }
 
 
-void Search_Ngram(Trie* trie,char* ngram,int count)
+void Search_Ngram(Trie* trie,char* ngram,int count, Index* result_array )
 {
     char *cut_word = NULL;  // Used later to cut the first word of current ngram
 
     char* result = malloc(((strlen(ngram))+1)*sizeof(char));
     memset(result,'\0',(strlen(ngram)+1)*sizeof(char));
     char* check_sub = NULL;
+    ///Init bloom filter.
+    short int *bloom = Init_Bloom();
 
     while (ngram != NULL)
     {
@@ -201,7 +205,7 @@ void Search_Ngram(Trie* trie,char* ngram,int count)
         check_sub = malloc((strlen(ngram)+1)*sizeof(char));
         strcpy(check_sub, ngram);
         clock_t begin = clock();
-        Search_Substream(trie->root, check_sub, &result,count);
+        Search_Substream(trie->root, check_sub, &result,count, bloom, result_array);
 
 
         free(check_sub);
@@ -220,6 +224,7 @@ void Search_Ngram(Trie* trie,char* ngram,int count)
        puts(result);
         free(result);
     }
+    free(bloom);
 }
 void Print_Trie(Trie_Node node)
 {
@@ -289,3 +294,4 @@ int Delete_Ngram(Trie_Node* current_node, char* ngram)
 
     return 0;
 }
+
