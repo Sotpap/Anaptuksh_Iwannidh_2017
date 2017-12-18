@@ -36,7 +36,7 @@ void Hash_Table_Destroy(Hash_Table* bucket);
 struct Trie_Node* Hash_Table_Insert(Hash_Table* hash_table,char* new_element,int is_final);
 struct Trie_Node* Bucket_Insert(struct Trie_Node* bucket,int* bucket_count,struct Trie_Node* new_node);
 void split(Hash_Table* hash_table,struct Trie_Node** current_node);
-struct Trie_Node* Hash_Table_Search(Hash_Table* hash_table,char* element);
+struct Trie_Node* Hash_Table_Search(Hash_Table* hash_table,char* element,int mode);
 int Hash_Table_Delete(Hash_Table* hash_table,char* element);
 void Print_HT(Hash_Table* hash_table);
 

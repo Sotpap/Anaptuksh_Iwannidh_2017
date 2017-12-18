@@ -8,7 +8,8 @@
 #include <ctype.h>
 #include "bloom.h"
 
-int bloom_size = 690037;
+//int bloom_size = 690037;
+int bloom_size = 70951;
 
 short int* Init_Bloom()
 {

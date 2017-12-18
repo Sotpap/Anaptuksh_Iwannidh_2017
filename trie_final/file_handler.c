@@ -77,7 +77,7 @@ int Extract_From_Init(FILE* init_file, Trie* trie) /*Getting words from init fil
 
                 Insert_Static(trie,line);
             }
-            compress(trie->root);
+            compress(trie);
 
             return 1;
         } else {
@@ -121,6 +121,7 @@ int Extract_From_Query(FILE* query_file, Trie* trie) /*Getting jobs from greeks 
         } else if (strcmp(job, "D") == 0) {
             Delete_Ngram(trie->root, work, 0);
         } else if (strcmp(job, "F") == 0) {
+
             if (work != NULL) {
                 top_k = atoi(work);
                 if (result_array->size > 0 && top_k > 0) Print_Top_K(result_array, top_k);
@@ -144,7 +145,8 @@ int Extract_From_Query_Static(FILE* query_file, Trie* trie) /*Getting jobs from 
     Index *result_array = Init_Result_Array();
 
     int count = 1;
-    while (getline(&line, &len, query_file) != -1) {
+    while (getline(&line, &len, query_file) != -1)
+    {
         line[strcspn(line, "\n")] = 0;
 
         job = strtok(line, " ");
@@ -152,7 +154,10 @@ int Extract_From_Query_Static(FILE* query_file, Trie* trie) /*Getting jobs from 
         work = strtok(NULL, "\n");
 
         if (strcmp(job, "Q") == 0) {
-            Search_Static(trie, work,count, result_array);
+          if(work != NULL) Search_Static(trie, work,count, result_array);
+         else printf("-1\n");
+           // Search_Static(trie,"above background noise",count,result_array);
+           //exit(0);
             count++;
         } else if (strcmp(job, "F") == 0) {
             if (work != NULL) {

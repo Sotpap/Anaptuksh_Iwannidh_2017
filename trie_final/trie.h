@@ -28,17 +28,7 @@ typedef struct Trie_Node
     int string_table_size;			// size of string table
     int size; 					//How many children this node has
 } Trie_Node;
-/*
-typedef struct Trie_Node
-{
-    int fere;
-    char* word;
-    int is_final;
-    struct Trie_Node*  children;
 
-    int size; //How many children this node has
-} Trie_Node;
-*/
 
 typedef struct Trie
 {
@@ -66,13 +56,17 @@ int binary_search(Trie_Node* current_node,int min,int max,char* word);
 int Delete_Ngram(Trie_Node* , char* ngram,int hash_count);
 void Print_Trie(Trie_Node root);
 int first_depth_first(char* string,int depth);
+int my_strcmp ( char * s1, char * s2);
 
 
 void Insert_Static(Trie* trie, char* ngram);
-void compress(Trie_Node* current);
-void  pull( Trie_Node* top_node);
+void compress(Trie* trie);
+void compress_bucket(Trie_Node* current);
+void pull( Trie_Node* top_node);
 void Search_Static(Trie* trie,char* ngram,int count,Index* );
-void Static_Substream(Trie_Node* root,char* ngram, char** result, short int*,Index* ,int count);
+void Static_Substream(Trie_Node* root,char* ngram, char** result, char** on_going_ngram, short int*,Index* ,int count);
 int Static_binary_search(Trie_Node* current_node,int min,int max,char* word);
+int my_strncmp (char * s1,char * s2, int size);
+int my_strlen(char *s);
 
 #endif //PROJECT_TRIE_HEADER_H

@@ -1,6 +1,28 @@
 #include "trie.h"
 #include "bloom.h"
 #include <time.h>
+
+extern int table_size;
+
+int my_strcmp ( char * s1, char * s2) {
+    int len1 = my_strlen(s1);
+    int len2 = strlen(s2);
+    int size;
+
+    if(len1 > len2) size = len1;
+    else size = len2;
+
+    for (int i = 0; i < size && (s1[i] != ' ' || s1[i] != '\n'); ++i) {
+        if (s1[i] < s2[i])
+            return -1;
+        else if (s1[i] > s2[i])
+            return 1;
+        else if (!s1[i])
+            return 0;
+    }
+    return 0;
+}
+
 int binary_search(Trie_Node* current_node,int min,int max,char* word)
 {
     int str_result;
@@ -8,7 +30,7 @@ int binary_search(Trie_Node* current_node,int min,int max,char* word)
     while(max >= min)
     {
         mid = (max+min)/2;
-        str_result = strcmp(word,current_node->children[mid].word);
+        str_result = my_strcmp(word,current_node->children[mid].word);
         if(str_result == 0) return mid;
         else if(str_result > 0)
         {
@@ -139,18 +161,18 @@ void Insert_Ngram(Trie* trie,char* ngram) {
 void Search_Substream(Trie_Node* root,char* ngram, char** result,int count, short int *bloom, Index* result_array,char** on_going_ngram) {
     Trie_Node *current_node = root;
 
-    char *save;
-    char *current_word = strtok_r(ngram, " \n", &save);
+    //char *save;
+    //char *current_word = strtok_r(ngram, " \n", &save);
 
 
     int i, position, node_size;
-    while (current_word != NULL) {
+    while (ngram != NULL) {
         position = -1;
 
         node_size = current_node->size;
         i = 0;
 
-        position = binary_search(current_node, 0, node_size - 1, current_word);
+        position = binary_search(current_node, 0, node_size - 1, ngram);
         ///Checking if current word exists in current_nodes children
 
 
@@ -159,28 +181,33 @@ void Search_Substream(Trie_Node* root,char* ngram, char** result,int count, shor
             return;
         } else {
             strcat(*on_going_ngram, " ");
-            strcat(*on_going_ngram, current_word);
+            strcat(*on_going_ngram, current_node->children[position].word);
 
             if (current_node->children[position].is_final) {
                 if (strlen(*result) == 0) {
-                    current_node->children[position].fere = count;
+                    //current_node->children[position].fere = count;
                     strcpy(*result, *on_going_ngram);
                     insert_bloom(bloom, *on_going_ngram);
                     Insert_Result_Array(result_array, *on_going_ngram);
                 } else if (check_bloom(bloom, *on_going_ngram)) {
-                    if (current_node->children[position].fere != count) {
-                        current_node->children[position].fere = count;
+                    //if (current_node->children[position].fere != count) {
+                        //current_node->children[position].fere = count;
                         strcat(*result, "|");
                         strcat(*result, *on_going_ngram);
                         Insert_Result_Array(result_array, *on_going_ngram);
-                    }
+                    //}
                 }
 
             }
 
             current_node = &current_node->children[position];
 
-            current_word = strtok_r(NULL, " \n", &save);
+            ngram = strchr(ngram, ' ');
+            if (ngram) {
+                ngram++;
+                while (*ngram == ' ') ngram++;
+            }
+            //current_word = strtok_r(NULL, " \n", &save);
         }
 
     }
@@ -206,7 +233,8 @@ int first_depth_first(char* word,int depth) {
 }
 
 void Search_Ngram(Trie* trie,char* ngram,int count, Index* result_array ) {
-    char *cut_word = NULL;  // Used later to cut the first word of current ngram
+    char *save = ngram;
+    char *iter_save;
 
     char *result = malloc(((strlen(ngram)) + 1) * sizeof(char));
     memset(result, '\0', (strlen(ngram) + 1) * sizeof(char));
@@ -217,51 +245,59 @@ void Search_Ngram(Trie* trie,char* ngram,int count, Index* result_array ) {
     char *token;
     Trie_Node *root_node;
     while (ngram != NULL) {
-
-        char *cs_copy;
+        iter_save = ngram;
+        //char *cs_copy;
 
         char *on_going_ngram = malloc(128);
         memset(on_going_ngram, '\0', 128);
 
-        len = first_depth_first(ngram, max_depth);
-        char *check_sub = strndup(ngram, len);
+        //len = first_depth_first(ngram, max_depth);
+        //char *check_sub = strndup(ngram, len);
 
-        cs_copy = check_sub;
+        //cs_copy = check_sub;
 
-        token = strtok(check_sub, " \n");
-        root_node = Hash_Table_Search(trie->root->hash_table, token);
+        //token = strtok(check_sub, " \n");
+        root_node = Hash_Table_Search(trie->root->hash_table, ngram,0);
 
         if (root_node != NULL) {
 
+            strcpy(on_going_ngram, root_node->word);
             if (root_node->is_final == 1) {
 
                 if (strlen(result) == 0) {
-                    root_node->fere = count;
-                    strcpy(result, token);
-                    insert_bloom(bloom, token);
-                    Insert_Result_Array(result_array, token);
-                } else if (check_bloom(bloom, token)) {
-                    if (root_node->fere != count) {
-                        root_node->fere = count;
-                        strcat(result, "|");
-                        strcat(result, token);
-                        Insert_Result_Array(result_array, token);
-                    }
+                    //root_node->fere = count;
+                    strcpy(result, on_going_ngram);
+                    insert_bloom(bloom, on_going_ngram);
+                    Insert_Result_Array(result_array, on_going_ngram);
+                } else if (check_bloom(bloom, on_going_ngram)) {
+                    //if (root_node->fere != count) {
+                    //root_node->fere = count;
+                    strcat(result, "|");
+                    strcat(result, on_going_ngram);
+                    Insert_Result_Array(result_array, on_going_ngram);
+                    //}
                 }
             }
 
-            strcpy(on_going_ngram, token);
-            check_sub = strtok(NULL, "\n");
-            if (check_sub != NULL)
-                Search_Substream(root_node, check_sub, &result, count, bloom, result_array, &on_going_ngram);
+
+            //check_sub = strtok(NULL, "\n");
+            if (ngram != NULL) {
+                ngram = strchr(ngram, ' ');
+                if (ngram) {
+                    ngram++;
+                    while (*ngram == ' ') ngram++;
+                }
+                Search_Substream(root_node, ngram, &result, count, bloom, result_array, &on_going_ngram);
+            }
 
         }
 
-        free(cs_copy);
+        //free(cs_copy);
 
         free(on_going_ngram);
         on_going_ngram = NULL;
 
+        ngram = iter_save;
         ngram = strchr(ngram, ' ');
         if (ngram) {
             ngram++;
@@ -289,7 +325,7 @@ int Delete_Ngram(Trie_Node* current_node,char* ngram,int hash_count) {
     char *remaining_ngram = strtok(NULL, "\n");
 
     if (hash_count == 0) {
-        Trie_Node *pos_next_node = Hash_Table_Search(current_node->hash_table, current_word);
+        Trie_Node *pos_next_node = Hash_Table_Search(current_node->hash_table, current_word,0);
 
         if (pos_next_node != NULL) {
 
@@ -352,9 +388,29 @@ int Delete_Ngram(Trie_Node* current_node,char* ngram,int hash_count) {
     return 0;
 }
 
+int my_strlen(char *s) {
+    int i = 0;
+    for (i = 0; s[i] != ' ' && s[i] != '\0'; i++);
+    return i;
+}
+
+
+int my_strncmp (char * s1, char * s2, int size) {
+    for (int i = 0; i < size && (s1[i] != ' ' || s1[i] != '\n'); ++i) {
+        if (s1[i] < s2[i])
+            return -1;
+        else if (s1[i] > s2[i])
+            return 1;
+        else if (!s1[i])
+            return 0;
+    }
+    return 0;
+}
+
 
 int Static_binary_search(Trie_Node* current_node,int min,int max,char* word) {
     int mid, str_result, len, i = 0;
+    char* temp = NULL;
 
     while (max >= min) {
         mid = (max + min) / 2;
@@ -363,12 +419,23 @@ int Static_binary_search(Trie_Node* current_node,int min,int max,char* word) {
 
         if (len < 0) len = -len;
 
-        str_result = strncmp(word, current_node->children[mid].word, len);
-        if (str_result == 0) return mid;
+        str_result = my_strncmp(word, current_node->children[mid].word, len);
+
+        if(str_result == 0 && len < my_strlen(word))
+        {
+            min = mid + 1;
+        }
+
+        else if (len == my_strlen(word) && str_result == 0) {
+            if(temp) free(temp);
+            return mid;
+        }
         else if (str_result > 0) min = mid + 1;
         else max = mid - 1;
     }
+    if(temp) free(temp);
     return -1;
+
 }
 
 void Insert_Static(Trie* trie, char* ngram) {
@@ -378,7 +445,15 @@ void Insert_Static(Trie* trie, char* ngram) {
     //Get the rest ngram
     char *remaining_ngram = strtok(NULL, "\n");
 
-    int i = 0, position, node_size, right_position, local = 0;
+    if(remaining_ngram != NULL) current_node = Hash_Table_Insert(trie->root->hash_table,current_word,0);
+    else current_node = Hash_Table_Insert(trie->root->hash_table,current_word,1);
+
+    int i = 0, position, node_size, right_position, local = 1;
+
+    current_word = strtok(remaining_ngram, " \n"); ///Getting next word if exists.
+
+    remaining_ngram = strtok(NULL,"\n"); /// Getting the rest of the ngram if exists.
+
 
     while (current_word != NULL) {
         //Init of variables
@@ -388,7 +463,7 @@ void Insert_Static(Trie* trie, char* ngram) {
         local++;
         i = 0;
 
-        position = binary_search(current_node, 0, node_size - 1, current_word);
+        position = Static_binary_search(current_node, 0, node_size - 1, current_word);
 
         if (position == -1) /// If we haven't found the word in current_node's children
         {
@@ -397,7 +472,8 @@ void Insert_Static(Trie* trie, char* ngram) {
 
             new_node->word = strdup(current_word);
 
-            new_node->string_table = calloc(STRING_TABLE_SIZE, sizeof(signed short int));
+            new_node->string_table = calloc(STRING_TABLE_SIZE , sizeof(signed short int));
+
 
 
             //Assigning the right values to the final identifiers
@@ -447,7 +523,8 @@ void Insert_Static(Trie* trie, char* ngram) {
 
             //Passing new node as current to keep inserting the rest of the ngram
             current_node = &(current_node->children[right_position]);
-        } else  ///If we found the word in current_node's children
+        }
+        else  ///If we found the word in current_node's children
         {
             //Checking if current word is the final of the ngram and updating if necessary
             if (remaining_ngram == NULL && current_node->children[position].is_final == 0) {
@@ -455,7 +532,7 @@ void Insert_Static(Trie* trie, char* ngram) {
                 current_node->children[position].string_table[0] = -(current_node->children[position].string_table[0]);
             }
             //Passing new node as current to keep inserting the rest of the ngram
-            current_node = &current_node->children[position];
+            current_node = &(current_node->children[position]);
         }
         //Getting next word if exists.
         current_word = strtok(remaining_ngram, " \n");
@@ -504,35 +581,52 @@ void  pull( Trie_Node* top_node) {
 
     }
 }
+void compress(Trie* trie)
+{
+    Hash_Table* hash_table = trie->root->hash_table;
+    for(int i = 0 ; i < table_size ; i++)
+    {
+        for(int k = 0 ; k < hash_table->hash_nodes[i].elem_count ; k++)
+        {
+            compress_bucket(&(hash_table->hash_nodes[i].my_bucket[k]));
+        }
+    }
+}
 
-void compress(Trie_Node* current) {
+
+void compress_bucket(Trie_Node* current) {
     if(current) {
+        if(current->size == 1)
+        {
+            pull(current);
+        }
         int i = 0;
         for (i = 0; i < current->size; i++) {
             if (current->children[i].size == 1) {
                 pull(&(current->children[i]));
-                //puts(current->children[i].word);
-                //for(int k = 0; k < current->children[i].string_table_size; k++) printf("%d ", current->children[i].string_table[k]);
-                //printf("\n");
+               // puts(current->children[i].word);
+               // for(int k = 0; k < current->children[i].string_table_size; k++) printf("%d ", current->children[i].string_table[k]);
+               // printf("\n");
                 if (current->children[i].size > 1) {
-                    compress(&(current->children[i]));
+                    compress_bucket(&(current->children[i]));
                 }
             } else if (current->children[i].size > 1) {
-                compress(&(current->children[i]));
+                compress_bucket(&(current->children[i]));
             }
         }
     }
 }
 
-void Static_Substream(Trie_Node* root,char* ngram, char** result, short int *bloom, Index* result_array,int count) {
+void Static_Substream(Trie_Node* root,char* ngram, char** result, char** on_going_ngram, short int *bloom, Index* result_array,int count) {
+
     Trie_Node *current_node = root;                //search starting from root
 
     char *save;
-    char *current_word = strtok_r(ngram, " \n", &save);
+    //char *current_word = strtok_r(ngram, " \n", &save);
 
-    char *on_going_ngram = malloc(5000);        // allocating and starting for string used in  strong current ngrams
+    //char *on_going_ngram = malloc(5000);        // allocating and starting for string used in  strong current ngrams
 
-    memset(on_going_ngram, '\0', 5000);
+    //memset(on_going_ngram, '\0', 5000);
 
     char *check_word;
 
@@ -541,38 +635,43 @@ void Static_Substream(Trie_Node* root,char* ngram, char** result, short int *blo
     temp = NULL;
     int i, position, node_size, len;
 
-    while (current_word != NULL) {
+
+    while (ngram != NULL) {
         position = -1;            // storing the position of the  word among children nodes
 
         node_size = current_node->size;
         i = 0;
 
-        position = binary_search(current_node, 0, node_size - 1, current_word);
+        position = Static_binary_search(current_node, 0, node_size - 1, ngram);
         ///Checking if current word exists in current_nodes children
 
 
         if (position == -1) /// If we haven't found the word in current_node's children
         {
-            free(on_going_ngram);
+            //if(on_going_ngram) free(on_going_ngram);
             if (temp) free(temp);
             return;
-        } else {
-            if (strlen(on_going_ngram) == 0) {
-                strcpy(on_going_ngram, current_word);
-            } else {
-                strcat(on_going_ngram, " ");
-                strcat(on_going_ngram, current_word);
+        }
+        else
+        {
+            if (strlen(*on_going_ngram) == 0) strncpy(*on_going_ngram, ngram, my_strlen(ngram));
+            else
+            {
+                strcat(*on_going_ngram, " ");
+                strncat(*on_going_ngram, ngram, my_strlen(ngram));
             }
-            if(current_node->children[position].string_table[0] > 0) {
-                printf("%p \n",result);
-                if (strlen(*result) == 0) {
-                    strcpy(*result, on_going_ngram);
-                    insert_bloom(bloom, on_going_ngram);
-                    Insert_Result_Array(result_array, on_going_ngram);
-                } else if (check_bloom(bloom, on_going_ngram)) {
+            if(current_node->children[position].string_table[0] > 0)
+            {
+                if (strlen(*result) == 0)
+                {
+                    strcpy(*result, *on_going_ngram);
+                    insert_bloom(bloom, *on_going_ngram);
+                    Insert_Result_Array(result_array, *on_going_ngram);
+                }
+                else if (check_bloom(bloom, *on_going_ngram)) {
                     strcat(*result, "|");
-                    strcat(*result, on_going_ngram);
-                    Insert_Result_Array(result_array, on_going_ngram);
+                    strcat(*result, *on_going_ngram);
+                    Insert_Result_Array(result_array, *on_going_ngram);
                 }
             }
 
@@ -580,48 +679,88 @@ void Static_Substream(Trie_Node* root,char* ngram, char** result, short int *blo
 
             temp = check_word;
 
-            len = current_node->string_table[0];
+
+            len = current_node->children[position].string_table[0];
 
             if (len < 0) len = -len;
 
-            for (i = 1; i < current_node->string_table_size; i++) {
-                current_word = strtok_r(NULL, " \n", &save);
+            check_word += len;
 
-                check_word += len;
+            for (i = 1; i < current_node->children[position].string_table_size; i++) {
+                //current_word = strtok_r(NULL, " \n", &save);
 
-                len = current_node->string_table[i];
+                ngram = strchr(ngram, ' ');
+                if (ngram) {
+                    ngram++;
+                    while (*ngram == ' ') ngram++;
+                }
+
+                len = current_node->children[position].string_table[i];
 
                 if (len < 0) len = -len;
 
-                check_word += len;
-
-                if (!strncmp(check_word, current_word, len)) {
-                    strcat(on_going_ngram, " ");
-                    strcat(on_going_ngram, current_word);
-                    if (current_node->string_table[i] > 0) {
-                        if (check_bloom(bloom, on_going_ngram)) {
-                            strcat(*result, "|");
-                            strcat(*result, on_going_ngram);
-                            Insert_Result_Array(result_array, on_going_ngram);
-                        }
-                    }
-                } else {
-                    if (check_word) free(check_word);
-                    free(on_going_ngram);
+                if(ngram == NULL || len != my_strlen(ngram))
+                {
+                    if (temp) free(temp);
+                    //free(on_going_ngram);
                     return;
                 }
+
+                if (!my_strncmp(check_word, ngram, len))
+                {
+                    strcat(*on_going_ngram, " ");
+                    strncat(*on_going_ngram, ngram, len);
+
+                    if (current_node->children[position].string_table[i] > 0)
+                    {
+                        if (strlen(*result) == 0)
+                        {
+                            strcpy(*result, *on_going_ngram);
+                            insert_bloom(bloom, *on_going_ngram);
+                            Insert_Result_Array(result_array, *on_going_ngram);
+                        }
+                        else if (check_bloom(bloom, *on_going_ngram))
+                        {
+                            strcat(*result, "|");
+                            strcat(*result, *on_going_ngram);
+                            Insert_Result_Array(result_array, *on_going_ngram);
+                        }
+                    }
+                }
+                else
+                {
+                    if (temp) free(temp);
+                    //free(on_going_ngram);
+                    return;
+                }
+
+
+                check_word += len;
             }
+            current_node = &(current_node->children[position]);
 
         }
-        current_word = strtok_r(NULL, " \n", &save);
+
+        ngram = strchr(ngram, ' ');
+        if (ngram) {
+            ngram++;
+            while (*ngram == ' ') ngram++;
+        }
+        //current_word = strtok_r(NULL, " \n", &save);
     }
-    free(on_going_ngram);
+    //free(on_going_ngram);
     if (temp) free(temp);
     return;
 }
 
-void Search_Static(Trie* trie,char* ngram,int count, Index* result_array) {
 
+
+
+
+
+void Search_Static(Trie* trie,char* ngram,int count, Index* result_array)
+{
+    char *save = ngram;
     short int *bloom = Init_Bloom();
 
     char *result = malloc(((strlen(ngram)) + 1) * sizeof(char)); //allocating memory for result string
@@ -629,20 +768,148 @@ void Search_Static(Trie* trie,char* ngram,int count, Index* result_array) {
     char *check_sub = NULL;                    // string used for storing each substream before searching
     int len = 0, max_depth = trie->depth + 1;
     char *cs_copy;
+    char *token;
+    char *on_going_ngram;
+    char* temp = NULL;
+    char* check_word;
+    Trie_Node *root_node;
+    char *iter_save;
 
     while (ngram != NULL)        //until we have search  each possible substream of ngram
     {
-        len = first_depth_first(ngram, max_depth);
-        char *check_sub = strndup(ngram, len);
+        iter_save = ngram;
+        //len = first_depth_first(ngram, max_depth);
+        //char *check_sub = strndup(ngram, len);
 
-        cs_copy = check_sub;
+        //cs_copy = check_sub;
 
-        Static_Substream(trie->root, check_sub, &result, bloom, result_array, count);        //search check sub in trie
 
+
+
+        //token = strtok(check_sub, " \n");
+        root_node = Hash_Table_Search(trie->root->hash_table, ngram,1);
+
+
+
+        if (root_node != NULL) {
+            on_going_ngram = malloc(128);
+            memset(on_going_ngram, '\0', 128);
+
+            //printf("eimai edw me leksh = %s kai mhkos %d \n",ngram,root_node->string_table[0]);
+            strncat(on_going_ngram, ngram, my_strlen(ngram));
+
+
+            if (root_node->string_table[0] > 0) {
+
+                if (strlen(result) == 0) {
+                    strcpy(result, on_going_ngram);
+                    insert_bloom(bloom, on_going_ngram);
+                    Insert_Result_Array(result_array, on_going_ngram);
+                } else if (check_bloom(bloom, on_going_ngram)) {
+                        strcat(result, "|");
+                        strcat(result, on_going_ngram);
+                        Insert_Result_Array(result_array, on_going_ngram);
+                }
+            }
+
+            char* check_word = strdup(root_node->word);
+
+
+            int flag = 0;
+            //char* current_word;
+
+            temp = check_word;
+
+
+            len = root_node->string_table[0];
+
+            if (len < 0) len = -len;
+
+            check_word += len;
+
+
+            for (int i = 1; i < root_node->string_table_size; i++) {
+                //current_word = strtok(NULL, " \n");
+
+                ngram = strchr(ngram, ' ');
+                if (ngram) {
+                    ngram++;
+                    while (*ngram == ' ') ngram++;
+                }
+
+                len = root_node->string_table[i];
+
+                if (len < 0) len = -len;
+
+                if(ngram == NULL || len != my_strlen(ngram))
+                {
+                    if (temp) free(temp);
+                    temp = NULL;
+                    flag = 1;
+                    break;
+                }
+
+                if (!my_strncmp(check_word, ngram, len))
+                {
+                    strcat(on_going_ngram, " ");
+                    strncat(on_going_ngram, ngram, my_strlen(ngram));
+
+                    if (root_node->string_table[i] > 0)
+                    {
+                        if (strlen(result) == 0)
+                        {
+                            strcpy(result,on_going_ngram);
+                            insert_bloom(bloom, on_going_ngram);
+                            Insert_Result_Array(result_array, on_going_ngram);
+                        }
+                        else if (check_bloom(bloom, on_going_ngram))
+                        {
+                            strcat(result, "|");
+                            strcat(result, on_going_ngram);
+                            Insert_Result_Array(result_array, on_going_ngram);
+                        }
+                    }
+                }
+                else
+                {
+                    if (temp) free(temp);
+                    temp = NULL;
+                    if(on_going_ngram) free(on_going_ngram);
+                    on_going_ngram = NULL;
+                    flag = 1;
+                    break;
+                }
+
+                check_word += len;
+            }
+
+            if (ngram != NULL && flag == 0)
+            {
+                ngram = strchr(ngram, ' ');
+                if (ngram) {
+                    ngram++;
+                    while (*ngram == ' ') ngram++;
+                }
+                //char* remaining_ngram = strtok(NULL,"\n");
+                Static_Substream(root_node, ngram, &result, &on_going_ngram, bloom, result_array, count);        //search check sub in trie
+            }
+
+        }
+
+       // if(temp) free(temp);
         free(cs_copy);                        // free check sub string
 
-        ngram = strchr(ngram, ' ');                    // subtracting a word from ngram
-        if (ngram) ngram++;
+        if(on_going_ngram) {
+            free(on_going_ngram);
+            on_going_ngram = NULL;
+        }
+
+        ngram = iter_save;
+        ngram = strchr(ngram, ' ');
+        if (ngram) {
+            ngram++;
+            while (*ngram == ' ') ngram++;
+        }
     }
 
     if (strlen(result) == 0)            // if not found
@@ -653,5 +920,7 @@ void Search_Static(Trie* trie,char* ngram,int count, Index* result_array) {
         puts(result);                //else print the result
         free(result);
     }
+
+    //free(save);
     free(bloom);
 }

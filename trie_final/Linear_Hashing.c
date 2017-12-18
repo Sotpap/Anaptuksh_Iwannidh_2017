@@ -25,6 +25,15 @@ int main(int argc,char** argv)
 
     int init = Extract_From_Init(file_list.init_file, trie);
 
+    for(int i = 0; i < trie->root->size; i++)
+    {
+      //  printf(" %s \n", trie->root->children[i].word);
+       // for(int k = 0; k < trie->root->children[i].string_table_size; k++) printf("%d ", trie->root->children[i].string_table[k]);
+
+      //  printf("\n");
+    }
+
+
     if(init == -1) return FILE_ERROR;
     else if(init == 1) {
         if(Extract_From_Query_Static(file_list.query_file, trie) == 0) return FILE_ERROR;
@@ -41,29 +50,55 @@ int main(int argc,char** argv)
 /*Searching for word in a bucket*/
 int binary_search_bucket(Trie_Node* current_node,int min,int max,char* word)
 {
-    int mid;
-    while(max >= min)
-    {
-        mid = (max+min)/2;
-        int str_result = strcmp(word,current_node[mid].word);
-        if(str_result == 0) return mid;
-        else if(str_result > 0)
+        int mid;
+        while(max >= min)
+        {
+            mid = (max+min)/2;
+            int str_result = my_strcmp(word,current_node[mid].word);
+            if(str_result == 0) return mid;
+            else if(str_result > 0)
+            {
+                min = mid + 1;
+            }
+            else
+            {
+                max = mid - 1;
+            }
+        }
+        return -1;
+}
+int static_binary_search_bucket(Trie_Node* current_node,int min,int max,char* word) {
+    int mid, str_result, len, i = 0;
+    char* temp = NULL;
+
+    while (max >= min) {
+        mid = (max + min) / 2;
+
+        len = current_node[mid].string_table[0];
+
+        if (len < 0) len = -len;
+
+        str_result = my_strncmp(word, current_node[mid].word, len);
+
+        if(str_result == 0 && len < my_strlen(word))
         {
             min = mid + 1;
         }
-        else
-        {
-            max = mid - 1;
+
+        else if (len == my_strlen(word) && str_result == 0) {
+            return mid;
         }
+        else if (str_result > 0) min = mid + 1;
+        else max = mid - 1;
     }
     return -1;
 
-
 }
+
 unsigned int hash_function (char* word)
 {
     unsigned int hash = 0;
-    for (int i = 0 ; word[i] != '\0' ; i++)
+    for (int i = 0 ; word[i] != '\0' && word[i] != ' ' ; i++)
     {
         hash = 31*hash + word[i];
     }
@@ -102,6 +137,14 @@ Trie_Node* New_Node(char* word,int is_final)
     new_node->hash_table = NULL;
 
     new_node->size = 0;
+
+    new_node->string_table = malloc(STRING_TABLE_SIZE*sizeof(signed short int));
+    memset(new_node->string_table,'\0',STRING_TABLE_SIZE*sizeof(signed short int));
+
+    if(is_final == 1) new_node->string_table[0] = strlen(word);
+    else new_node->string_table[0] = -strlen(word);
+
+    new_node->string_table_size = 1;
 
     new_node->children = malloc(SIZE*sizeof(Trie_Node));
 
@@ -154,10 +197,14 @@ void Hash_Table_Destroy(Hash_Table* hash_table)
 
 Trie_Node* Hash_Table_Insert(Hash_Table* hash_table,char* new_element,int is_final)
 {
-    Trie_Node* my_node =  Hash_Table_Search(hash_table,new_element);
+    Trie_Node* my_node =  Hash_Table_Search(hash_table,new_element,0);
     if(my_node != NULL) /*If string exists on hashtable we return where we found it*/
     {
-        if(my_node->is_final == 0) my_node->is_final = is_final;
+        if(my_node->is_final == 0)
+        {
+            if(is_final == 1) my_node->string_table[0] = my_node->string_table[0] < 0 ? -my_node->string_table[0]:my_node->string_table[0];
+            my_node->is_final = is_final;
+        }
         return my_node;
     }
     /*If we havent found string on HT we have to create a new node and insert it*/
@@ -311,14 +358,14 @@ Trie_Node* Bucket_Insert(Trie_Node* bucket,int* bucket_count,Trie_Node* new_node
 
 
 }
-
-Trie_Node* Hash_Table_Search(Hash_Table* hash_table,char* element)
+/*mode = 1 ---> STATIC else DYNAMIC */
+Trie_Node* Hash_Table_Search(Hash_Table* hash_table,char* element,int mode)
 {
     int index = hash(element, split_round);
     if(index < split_index) index = hash(element,split_round+1);
-
-    int val = binary_search_bucket(hash_table->hash_nodes[index].my_bucket,0,hash_table->hash_nodes[index].elem_count-1,element);
-
+    int val = -1;
+    if(mode == 1) val = static_binary_search_bucket(hash_table->hash_nodes[index].my_bucket,0,hash_table->hash_nodes[index].elem_count-1,element);
+    else val = binary_search_bucket(hash_table->hash_nodes[index].my_bucket,0,hash_table->hash_nodes[index].elem_count-1,element);
     if(val == -1) return NULL;
 
     return &(hash_table->hash_nodes[index].my_bucket[val]);
