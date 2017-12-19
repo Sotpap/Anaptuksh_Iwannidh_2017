@@ -246,17 +246,12 @@ void Search_Ngram(Trie* trie,char* ngram,int count, Index* result_array ) {
     Trie_Node *root_node;
     while (ngram != NULL) {
         iter_save = ngram;
-        //char *cs_copy;
+
 
         char *on_going_ngram = malloc(128);
         memset(on_going_ngram, '\0', 128);
 
-        //len = first_depth_first(ngram, max_depth);
-        //char *check_sub = strndup(ngram, len);
 
-        //cs_copy = check_sub;
-
-        //token = strtok(check_sub, " \n");
         root_node = Hash_Table_Search(trie->root->hash_table, ngram,0);
 
         if (root_node != NULL) {
@@ -292,7 +287,6 @@ void Search_Ngram(Trie* trie,char* ngram,int count, Index* result_array ) {
 
         }
 
-        //free(cs_copy);
 
         free(on_going_ngram);
         on_going_ngram = NULL;
@@ -767,35 +761,38 @@ void Search_Static(Trie* trie,char* ngram,int count, Index* result_array)
     memset(result, '\0', (strlen(ngram) + 1) * sizeof(char));      //arxikopoihsh tou result
     char *check_sub = NULL;                    // string used for storing each substream before searching
     int len = 0, max_depth = trie->depth + 1;
-    char *cs_copy;
     char *token;
-    char *on_going_ngram;
     char* temp = NULL;
     char* check_word;
     Trie_Node *root_node;
     char *iter_save;
 
+    char* on_going_ngram = malloc(64);
+
+    int total_len = 0;
+
     while (ngram != NULL)        //until we have search  each possible substream of ngram
     {
         iter_save = ngram;
-        //len = first_depth_first(ngram, max_depth);
-        //char *check_sub = strndup(ngram, len);
 
-        //cs_copy = check_sub;
-
-
-
-
-        //token = strtok(check_sub, " \n");
         root_node = Hash_Table_Search(trie->root->hash_table, ngram,1);
 
+       // root_node = NULL;
 
+        if(root_node == NULL)
+        {
+            ngram = iter_save;
+            ngram = strchr(ngram, ' ');
+            if (ngram) {
+                ngram++;
+                while (*ngram == ' ') ngram++;
+            }
+        }
+        else
+        {
 
-        if (root_node != NULL) {
-            on_going_ngram = malloc(128);
-            memset(on_going_ngram, '\0', 128);
+            memset(on_going_ngram, '\0', 64);
 
-            //printf("eimai edw me leksh = %s kai mhkos %d \n",ngram,root_node->string_table[0]);
             strncat(on_going_ngram, ngram, my_strlen(ngram));
 
 
@@ -812,24 +809,21 @@ void Search_Static(Trie* trie,char* ngram,int count, Index* result_array)
                 }
             }
 
-            char* check_word = strdup(root_node->word);
-
 
             int flag = 0;
-            //char* current_word;
+
 
             temp = check_word;
-
 
             len = root_node->string_table[0];
 
             if (len < 0) len = -len;
-
-            check_word += len;
+            total_len = 0;
+            root_node->word += len;
+            total_len+=len;
 
 
             for (int i = 1; i < root_node->string_table_size; i++) {
-                //current_word = strtok(NULL, " \n");
 
                 ngram = strchr(ngram, ' ');
                 if (ngram) {
@@ -849,7 +843,7 @@ void Search_Static(Trie* trie,char* ngram,int count, Index* result_array)
                     break;
                 }
 
-                if (!my_strncmp(check_word, ngram, len))
+                if (!my_strncmp(root_node->word, ngram, len))
                 {
                     strcat(on_going_ngram, " ");
                     strncat(on_going_ngram, ngram, my_strlen(ngram));
@@ -874,42 +868,41 @@ void Search_Static(Trie* trie,char* ngram,int count, Index* result_array)
                 {
                     if (temp) free(temp);
                     temp = NULL;
-                    if(on_going_ngram) free(on_going_ngram);
-                    on_going_ngram = NULL;
                     flag = 1;
                     break;
                 }
 
-                check_word += len;
+                root_node->word += len;
+                total_len+=len;
             }
 
-            if (ngram != NULL && flag == 0)
+
+            if (flag == 0 && ngram != NULL )
             {
                 ngram = strchr(ngram, ' ');
                 if (ngram) {
                     ngram++;
                     while (*ngram == ' ') ngram++;
                 }
-                //char* remaining_ngram = strtok(NULL,"\n");
+
                 Static_Substream(root_node, ngram, &result, &on_going_ngram, bloom, result_array, count);        //search check sub in trie
+            }
+            root_node->word -= total_len;
+
+
+
+            ngram = iter_save;
+            ngram = strchr(ngram, ' ');
+            if (ngram) {
+                ngram++;
+                while (*ngram == ' ') ngram++;
             }
 
         }
 
-       // if(temp) free(temp);
-        free(cs_copy);                        // free check sub string
 
-        if(on_going_ngram) {
-            free(on_going_ngram);
-            on_going_ngram = NULL;
-        }
 
-        ngram = iter_save;
-        ngram = strchr(ngram, ' ');
-        if (ngram) {
-            ngram++;
-            while (*ngram == ' ') ngram++;
-        }
+
     }
 
     if (strlen(result) == 0)            // if not found

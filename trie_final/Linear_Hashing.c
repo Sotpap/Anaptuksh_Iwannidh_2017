@@ -71,6 +71,7 @@ int static_binary_search_bucket(Trie_Node* current_node,int min,int max,char* wo
     int mid, str_result, len, i = 0;
     char* temp = NULL;
 
+
     while (max >= min) {
         mid = (max + min) / 2;
 
@@ -80,13 +81,13 @@ int static_binary_search_bucket(Trie_Node* current_node,int min,int max,char* wo
 
         str_result = my_strncmp(word, current_node[mid].word, len);
 
-        if(str_result == 0 && len < my_strlen(word))
+
+        if (str_result == 0 && len == my_strlen(word) ) {
+            return mid;
+        }
+        else if(str_result == 0 && len < my_strlen(word))
         {
             min = mid + 1;
-        }
-
-        else if (len == my_strlen(word) && str_result == 0) {
-            return mid;
         }
         else if (str_result > 0) min = mid + 1;
         else max = mid - 1;
